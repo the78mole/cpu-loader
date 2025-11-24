@@ -144,16 +144,12 @@ class MQTTPublisher:
         except Exception as e:
             logger.error(f"Failed to publish load settings: {e}")
 
-<<<<<<< HEAD
-    def publish_cpu_metrics(self, total_cpu_percent: float, per_cpu_percent: list, cpu_temperature: Optional[float] = None):
-=======
     def publish_cpu_metrics(
         self,
         total_cpu_percent: float,
         per_cpu_percent: list,
         cpu_temperature: Optional[float] = None,
     ):
->>>>>>> 0b500ee (feat: add CPU temperature monitoring and update related UI components)
         """
         Publish CPU metrics to MQTT.
 
@@ -171,10 +167,6 @@ class MQTTPublisher:
                 "total_cpu_percent": round(total_cpu_percent, 1),
                 "per_cpu_percent": [round(cpu, 1) for cpu in per_cpu_percent],
             }
-            
-            # Add temperature if available
-            if cpu_temperature is not None:
-                payload["cpu_temperature"] = cpu_temperature
 
             # Add temperature if available
             if cpu_temperature is not None:

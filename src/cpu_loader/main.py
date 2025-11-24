@@ -12,11 +12,7 @@ from typing import Dict, List, Optional, Set
 import psutil
 import uvicorn
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-<<<<<<< HEAD
-from fastapi.responses import HTMLResponse, FileResponse
-=======
 from fastapi.responses import FileResponse, HTMLResponse
->>>>>>> 0b500ee (feat: add CPU temperature monitoring and update related UI components)
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -66,22 +62,13 @@ mqtt_publisher: Optional[MQTTPublisher] = None
 websocket_connections: Set[WebSocket] = set()
 monitoring_task = None
 temperature_monitoring_enabled = True
+temperature_monitoring_enabled = True
 
 
 def get_cpu_temperature() -> Optional[float]:
     """Get CPU temperature if available and enabled."""
     if not temperature_monitoring_enabled:
         return None
-<<<<<<< HEAD
-    
-    try:
-        # Try to get CPU temperature using psutil
-        temperatures = psutil.sensors_temperatures()
-        
-        # Common temperature sensor names to check
-        temp_names = ['coretemp', 'cpu_thermal', 'acpi', 'k8temp', 'k10temp']
-        
-=======
 
     try:
         # Try to get CPU temperature using psutil
@@ -90,35 +77,22 @@ def get_cpu_temperature() -> Optional[float]:
         # Common temperature sensor names to check
         temp_names = ["coretemp", "cpu_thermal", "acpi", "k8temp", "k10temp"]
 
->>>>>>> 0b500ee (feat: add CPU temperature monitoring and update related UI components)
         for temp_name in temp_names:
             if temp_name in temperatures:
                 # Get the first temperature reading
                 temp_list = temperatures[temp_name]
                 if temp_list:
                     return round(temp_list[0].current, 1)
-<<<<<<< HEAD
-        
-=======
 
->>>>>>> 0b500ee (feat: add CPU temperature monitoring and update related UI components)
         # If no specific sensor found, try the first available
         for sensor_name, temp_list in temperatures.items():
             if temp_list:
                 return round(temp_list[0].current, 1)
-<<<<<<< HEAD
-                
-    except (AttributeError, OSError, ImportError):
-        # Temperature monitoring not available on this system
-        pass
-    
-=======
 
     except (AttributeError, OSError, ImportError):
         # Temperature monitoring not available on this system
         pass
 
->>>>>>> 0b500ee (feat: add CPU temperature monitoring and update related UI components)
     return None
 
 
@@ -135,9 +109,6 @@ async def cpu_monitoring_loop():
             # Get CPU metrics (non-blocking after first call)
             per_cpu = psutil.cpu_percent(interval=None, percpu=True)
             total_cpu = sum(per_cpu) / len(per_cpu) if per_cpu else 0.0
-            
-            # Get CPU temperature if available
-            cpu_temp = get_cpu_temperature()
 
             # Get CPU temperature if available
             cpu_temp = get_cpu_temperature()
@@ -268,13 +239,7 @@ async def get_cpu_metrics():
     total_cpu = psutil.cpu_percent(interval=0)
     cpu_temp = get_cpu_temperature()
     return CPUMetricsResponse(
-<<<<<<< HEAD
-        total_cpu_percent=total_cpu, 
-        per_cpu_percent=per_cpu,
-        cpu_temperature=cpu_temp
-=======
         total_cpu_percent=total_cpu, per_cpu_percent=per_cpu, cpu_temperature=cpu_temp
->>>>>>> 0b500ee (feat: add CPU temperature monitoring and update related UI components)
     )
 
 
@@ -400,9 +365,6 @@ def run():
     """Entry point for the CPU Loader application."""
     global temperature_monitoring_enabled
     args = parse_args()
-    
-    # Set temperature monitoring based on CLI argument
-    temperature_monitoring_enabled = not args.disable_temperature
 
     # Set temperature monitoring based on CLI argument
     temperature_monitoring_enabled = not args.disable_temperature
