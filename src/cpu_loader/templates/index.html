@@ -214,6 +214,15 @@
                     <div class="cpu-bar total" id="total-cpu-bar" style="width: 0%"></div>
                 </div>
             </div>
+            <div class="cpu-bar-container" id="cpu-temperature-container" style="display: none;">
+                <div class="cpu-bar-label">
+                    <span><strong>🌡️ CPU Temperature</strong></span>
+                    <span id="cpu-temperature-value">-</span>
+                </div>
+                <div class="cpu-bar-wrapper">
+                    <div class="cpu-bar" id="cpu-temperature-bar" style="width: 0%; background: linear-gradient(90deg, #2196F3 0%, #4CAF50 25%, #FFC107 60%, #FF5722 85%, #B71C1C 100%);"></div>
+                </div>
+            </div>
             <div id="per-cpu-bars"></div>
         </div>
 
@@ -273,6 +282,20 @@
             const totalCpu = data.total_cpu_percent;
             document.getElementById('total-cpu-value').textContent = `${totalCpu}%`;
             document.getElementById('total-cpu-bar').style.width = `${totalCpu}%`;
+
+            // Update CPU temperature if available
+            if (data.cpu_temperature !== null && data.cpu_temperature !== undefined) {
+                const tempContainer = document.getElementById('cpu-temperature-container');
+                const tempValue = document.getElementById('cpu-temperature-value');
+                const tempBar = document.getElementById('cpu-temperature-bar');
+                
+                tempContainer.style.display = 'block';
+                tempValue.textContent = `${data.cpu_temperature}°C`;
+                
+                // Scale temperature (0-100°C -> 0-100%)
+                const tempPercent = Math.min(100, Math.max(0, data.cpu_temperature));
+                tempBar.style.width = `${tempPercent}%`;
+            }
 
             // Update per-CPU bars
             const perCpuContainer = document.getElementById('per-cpu-bars');

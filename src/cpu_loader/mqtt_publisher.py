@@ -144,13 +144,14 @@ class MQTTPublisher:
         except Exception as e:
             logger.error(f"Failed to publish load settings: {e}")
 
-    def publish_cpu_metrics(self, total_cpu_percent: float, per_cpu_percent: list):
+    def publish_cpu_metrics(self, total_cpu_percent: float, per_cpu_percent: list, cpu_temperature: Optional[float] = None):
         """
         Publish CPU metrics to MQTT.
 
         Args:
             total_cpu_percent: Total CPU utilization percentage
             per_cpu_percent: List of per-CPU utilization percentages
+            cpu_temperature: CPU temperature in Celsius (optional)
         """
         if not self.connected or not self.client:
             return
@@ -161,6 +162,10 @@ class MQTTPublisher:
                 "total_cpu_percent": round(total_cpu_percent, 1),
                 "per_cpu_percent": [round(cpu, 1) for cpu in per_cpu_percent],
             }
+            
+            # Add temperature if available
+            if cpu_temperature is not None:
+                payload["cpu_temperature"] = cpu_temperature
 
             # Publish to topic
             topic = f"{self.topic_prefix}/cpu_metrics"

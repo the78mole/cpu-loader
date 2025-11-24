@@ -6,12 +6,14 @@ import argparse
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Dict, List, Optional, Set
 
 import psutil
 import uvicorn
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from cpu_loader.cpu_loader import CPULoader
@@ -51,6 +53,7 @@ class ThreadsStatusResponse(BaseModel):
 class CPUMetricsResponse(BaseModel):
     total_cpu_percent: float
     per_cpu_percent: List[float]
+    cpu_temperature: Optional[float] = None
 
 
 # Global CPU loader instance, MQTT publisher, and WebSocket connections
@@ -58,6 +61,38 @@ cpu_loader = None
 mqtt_publisher: Optional[MQTTPublisher] = None
 websocket_connections: Set[WebSocket] = set()
 monitoring_task = None
+temperature_monitoring_enabled = True
+
+
+def get_cpu_temperature() -> Optional[float]:
+    """Get CPU temperature if available and enabled."""
+    if not temperature_monitoring_enabled:
+        return None
+    
+    try:
+        # Try to get CPU temperature using psutil
+        temperatures = psutil.sensors_temperatures()
+        
+        # Common temperature sensor names to check
+        temp_names = ['coretemp', 'cpu_thermal', 'acpi', 'k8temp', 'k10temp']
+        
+        for temp_name in temp_names:
+            if temp_name in temperatures:
+                # Get the first temperature reading
+                temp_list = temperatures[temp_name]
+                if temp_list:
+                    return round(temp_list[0].current, 1)
+        
+        # If no specific sensor found, try the first available
+        for sensor_name, temp_list in temperatures.items():
+            if temp_list:
+                return round(temp_list[0].current, 1)
+                
+    except (AttributeError, OSError, ImportError):
+        # Temperature monitoring not available on this system
+        pass
+    
+    return None
 
 
 async def cpu_monitoring_loop():
@@ -73,12 +108,16 @@ async def cpu_monitoring_loop():
             # Get CPU metrics (non-blocking after first call)
             per_cpu = psutil.cpu_percent(interval=None, percpu=True)
             total_cpu = sum(per_cpu) / len(per_cpu) if per_cpu else 0.0
+            
+            # Get CPU temperature if available
+            cpu_temp = get_cpu_temperature()
 
             # Prepare message
             message = {
                 "type": "cpu_metrics",
                 "total_cpu_percent": round(total_cpu, 1),
                 "per_cpu_percent": [round(cpu, 1) for cpu in per_cpu],
+                "cpu_temperature": cpu_temp,
             }
 
             # Broadcast to all connected clients
@@ -95,7 +134,7 @@ async def cpu_monitoring_loop():
 
             # Publish to MQTT if enabled
             if mqtt_publisher:
-                mqtt_publisher.publish_cpu_metrics(total_cpu, per_cpu)
+                mqtt_publisher.publish_cpu_metrics(total_cpu, per_cpu, cpu_temp)
 
         except Exception as e:
             logger.error(f"Error in CPU monitoring loop: {e}")
@@ -142,6 +181,21 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Mount static files
+static_path = Path(__file__).parent / "static"
+if static_path.exists():
+    app.mount("/static", StaticFiles(directory=static_path), name="static")
+
+
+@app.get("/favicon.ico")
+async def get_favicon():
+    """Serve the favicon."""
+    favicon_path = Path(__file__).parent / "static" / "favicon.svg"
+    if favicon_path.exists():
+        return FileResponse(favicon_path, media_type="image/svg+xml")
+    else:
+        raise HTTPException(status_code=404, detail="Favicon not found")
+
 
 @app.get("/", response_class=HTMLResponse)
 async def get_webui():
@@ -182,7 +236,12 @@ async def get_cpu_metrics():
     """Get current CPU utilization metrics."""
     per_cpu = psutil.cpu_percent(interval=0.1, percpu=True)
     total_cpu = psutil.cpu_percent(interval=0)
-    return CPUMetricsResponse(total_cpu_percent=total_cpu, per_cpu_percent=per_cpu)
+    cpu_temp = get_cpu_temperature()
+    return CPUMetricsResponse(
+        total_cpu_percent=total_cpu, 
+        per_cpu_percent=per_cpu,
+        cpu_temperature=cpu_temp
+    )
 
 
 @app.post("/api/threads")
@@ -266,6 +325,11 @@ def parse_args():
         default=8000,
         help="Port to bind the server to (default: 8000)",
     )
+    parser.add_argument(
+        "--disable-temperature",
+        action="store_true",
+        help="Disable CPU temperature monitoring (useful if temperature sensors are unavailable)",
+    )
 
     # MQTT arguments
     mqtt_group = parser.add_argument_group("MQTT settings")
@@ -300,7 +364,11 @@ def parse_args():
 
 def run():
     """Entry point for the CPU Loader application."""
+    global temperature_monitoring_enabled
     args = parse_args()
+    
+    # Set temperature monitoring based on CLI argument
+    temperature_monitoring_enabled = not args.disable_temperature
 
     # Prepare MQTT arguments (only non-None values)
     mqtt_args = {}

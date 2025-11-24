@@ -53,4 +53,4 @@ package-dir = {"" = "src"}
 packages = ["cpu_loader"]
 
 [tool.setuptools.package-data]
-cpu_loader = ["templates/*.html", "*.c"]
+cpu_loader = ["templates/*.html", "static/*", "*.c"]
