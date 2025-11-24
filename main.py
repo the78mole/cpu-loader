@@ -2,6 +2,7 @@
 CPU Loader FastAPI Application
 Provides REST API and WebUI for controlling CPU load.
 """
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
@@ -29,15 +30,28 @@ class ThreadsStatusResponse(BaseModel):
     loads: Dict[int, float]
 
 
+# Global CPU loader instance
+cpu_loader = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for startup and shutdown events."""
+    global cpu_loader
+    # Startup
+    cpu_loader = CPULoader()
+    yield
+    # Shutdown
+    cpu_loader.shutdown()
+
+
 # Initialize FastAPI app
 app = FastAPI(
     title="CPU Loader API",
     description="Control CPU load generation with configurable threads",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
-
-# Global CPU loader instance
-cpu_loader = CPULoader()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -437,12 +451,6 @@ async def set_all_thread_loads(request: AllThreadsLoadRequest):
         }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown."""
-    cpu_loader.shutdown()
 
 
 if __name__ == "__main__":

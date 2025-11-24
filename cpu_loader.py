@@ -48,7 +48,7 @@ class CPULoader:
                 time.sleep(0.1)
             else:
                 # Generate load using busy waiting
-                # load is between 0.0 and 1.0 (0% to 100%)
+                # load is the fractional value (0.0 to 1.0) representing the percentage (0% to 100%)
                 work_time = load * 0.1  # Work for this fraction of 100ms
                 sleep_time = (1.0 - load) * 0.1  # Sleep for the rest
                 
@@ -136,9 +136,12 @@ class CPULoader:
         for thread_id in range(self.num_threads):
             self.stop_flags[thread_id].set()
         
-        # Wait for threads to finish
+        # Wait for threads to finish with longer timeout and verification
         for thread in self.threads:
-            thread.join(timeout=1.0)
+            thread.join(timeout=2.0)
+            if thread.is_alive():
+                # Thread didn't stop cleanly, but since it's a daemon, it will be terminated
+                pass
         
         # Reset state
         self.num_threads = num_threads
@@ -157,5 +160,9 @@ class CPULoader:
         for thread_id in range(self.num_threads):
             self.stop_flags[thread_id].set()
         
+        # Wait for all threads to finish with verification
         for thread in self.threads:
-            thread.join(timeout=1.0)
+            thread.join(timeout=2.0)
+            if thread.is_alive():
+                # Thread didn't stop cleanly, but since it's a daemon, it will be terminated
+                pass
