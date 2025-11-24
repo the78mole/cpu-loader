@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint and Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install pre-commit
+        run: uv tool install pre-commit
+
+      - name: Run pre-commit hooks
+        run: uvx pre-commit run --all-files
+
+  build_and_test:
+    name: Build and Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+
+      - name: Install dependencies with uv
+        run: uv sync
+
+      - name: Test C extension import
+        run: |
+          uv run python -c "import cpu_loader; print('C extension loaded successfully')"
+          uv run python -c "from cpu_loader import CPULoader; print('CPULoader imported successfully')"
+
+      - name: Run basic functionality test
+        run: |
+          uv run python -c "
+          from cpu_loader import CPULoader
+          import time
+          loader = CPULoader(num_threads=2)
+          loader.set_thread_load(0, 10.0)
+          time.sleep(0.5)
+          load = loader.get_thread_load(0)
+          assert abs(load - 10.0) < 0.1, f'Expected 10.0, got {load}'
+          loader.shutdown()
+          print('Basic functionality test passed')
+          "
