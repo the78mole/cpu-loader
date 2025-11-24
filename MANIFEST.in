@@ -3,3 +3,4 @@ include LICENSE
 include pyproject.toml
 include setup.py
 recursive-include src *.py *.c *.h *.html
+recursive-include screenshots *.png *.jpg *.jpeg *.gif *.svg
