@@ -2,6 +2,7 @@
 MQTT Publisher Module
 Publishes CPU load control settings and metrics to MQTT broker.
 """
+
 import json
 import logging
 import os

@@ -3,6 +3,7 @@ CPU Loader Module
 Provides CPU load generation with controllable load per thread.
 Uses a C extension for efficient CPU load generation.
 """
+
 import multiprocessing
 from typing import Dict
 

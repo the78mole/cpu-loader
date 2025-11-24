@@ -2,6 +2,7 @@
 CPU Loader FastAPI Application
 Provides REST API and WebUI for controlling CPU load.
 """
+
 import argparse
 import asyncio
 import logging
