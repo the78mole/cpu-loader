@@ -31,4 +31,8 @@
   <rect x="13" y="14" width="2" height="6" fill="#FFC107"/>
   <rect x="16" y="10" width="2" height="10" fill="#F44336"/>
   <rect x="19" y="16" width="2" height="4" fill="#2196F3"/>
+<<<<<<< HEAD
 </svg>
+=======
+</svg>
+>>>>>>> 0b500ee (feat: add CPU temperature monitoring and update related UI components)
