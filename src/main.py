@@ -340,7 +340,7 @@ async def get_webui():
 </head>
 <body>
     <div class="container">
-        <h1>🔥 CPU Loader Control</h1>
+        <h1>&#x1F525; CPU Loader Control</h1>
         <p class="subtitle">Control CPU load per thread in real-time</p>
 
         <div class="status">
