@@ -1,0 +1,29 @@
+[project]
+name = "cpu-loader"
+version = "0.1.0"
+description = "A tool to generate CPU load on a system with runtime configuration through a WebUI and REST API"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "fastapi==0.115.0",
+    "uvicorn[standard]==0.32.0",
+    "pydantic==2.10.0",
+    "requests==2.32.3",
+    "psutil>=5.9.0",
+    "websockets>=12.0",
+]
+
+[project.scripts]
+cpu-loader = "main:run"
+
+[project.urls]
+Homepage = "https://github.com/the78mole/cpu-loader"
+Repository = "https://github.com/the78mole/cpu-loader"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["cpu_loader", "main", "example"]

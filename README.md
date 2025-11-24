@@ -31,17 +31,19 @@ git clone https://github.com/the78mole/cpu-loader.git
 cd cpu-loader
 ```
 
-2. Install dependencies:
+2. Install dependencies and build C extension:
 ```bash
-pip install -r requirements.txt
+uv pip install -e .
 ```
+
+This will compile the high-performance C extension for efficient CPU load generation.
 
 ## Usage
 
 ### Starting the Server
 
 ```bash
-python main.py
+uv run src/main.py
 ```
 
 The server will start on `http://localhost:8000`
@@ -103,14 +105,14 @@ Once the server is running, visit `http://localhost:8000/docs` for interactive A
 
 ## Example Script
 
-An example script (`example.py`) is provided to demonstrate programmatic control:
+An example script (`src/example.py`) is provided to demonstrate programmatic control:
 
 ```bash
 # Start the server first
-python main.py
+uv run src/main.py
 
 # In another terminal, run the example
-python example.py
+uv run src/example.py
 ```
 
 The example demonstrates:
@@ -122,10 +124,11 @@ The example demonstrates:
 
 ## Architecture
 
-- **cpu_loader.py**: Core CPU load generation engine with thread management
-- **main.py**: FastAPI application with REST API and embedded WebUI
-- **Threading Model**: Each thread runs independently with configurable load percentage
-- **Load Algorithm**: Uses busy-wait loops with precise timing for accurate load generation
+- **src/cpu_loader_core.c**: High-performance C implementation using pthreads for CPU load generation
+- **src/cpu_loader.py**: Python wrapper providing a clean API to the C extension
+- **src/main.py**: FastAPI application with REST API and embedded WebUI
+- **Threading Model**: Native pthreads for maximum efficiency and precise timing
+- **Load Algorithm**: High-resolution busy-wait loops with nanosecond precision
 
 ## Requirements
 
@@ -133,6 +136,7 @@ The example demonstrates:
 - FastAPI 0.115.0+
 - Uvicorn 0.32.0+
 - Pydantic 2.10.0+
+- C compiler (gcc or clang) for building the extension
 
 ## Use Cases
 
