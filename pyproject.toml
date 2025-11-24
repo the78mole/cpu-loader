@@ -3,8 +3,8 @@ name = "cpu-loader"
 version = "0.1.0"
 description = "A tool to generate CPU load on a system with runtime configuration through a WebUI and REST API"
 readme = "README.md"
-requires-python = ">=3.8"
-license = {file = "LICENSE"}
+requires-python = ">=3.9"
+license = "MIT"
 authors = [
     {name = "the78mole", email = "the78mole@users.noreply.github.com"}
 ]
@@ -16,7 +16,6 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -26,10 +25,10 @@ classifiers = [
     "Topic :: System :: Monitoring",
 ]
 dependencies = [
-    "fastapi==0.115.0",
-    "uvicorn[standard]==0.32.0",
-    "pydantic==2.10.0",
-    "requests==2.32.3",
+    "fastapi==0.121.3",
+    "uvicorn[standard]==0.38.0",
+    "pydantic==2.12.4",
+    "requests==2.32.5",
     "psutil>=5.9.0",
     "websockets>=12.0",
     "paho-mqtt>=2.1.0",
@@ -50,7 +49,10 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["cpu_loader"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["cpu_loader*"]
 
 [tool.setuptools.package-data]
 cpu_loader = ["templates/*.html", "static/*", "*.c"]
