@@ -15,6 +15,7 @@ A tool to generate CPU load on a system with runtime configuration through a Web
 - 🌐 **Modern WebUI**: Beautiful, responsive interface for real-time control
 - ⚡ **Instant Response**: Changes take effect immediately
 - 📊 **Live Monitoring**: View active threads and average load in real-time
+- 📡 **MQTT Integration**: Publish metrics and settings to MQTT broker for IoT/monitoring systems
 
 ## Screenshots
 
@@ -75,6 +76,22 @@ uv run src/main.py
 
 The server will start on `http://localhost:8000`
 
+#### Command-Line Options
+
+```bash
+uv run src/main.py --help
+```
+
+**Available Options:**
+- `--host HOST`: Host to bind the server to (default: 0.0.0.0)
+- `--port PORT`: Port to bind the server to (default: 8000)
+- `--mqtt-broker-host HOST`: MQTT broker hostname
+- `--mqtt-broker-port PORT`: MQTT broker port (default: 1883)
+- `--mqtt-username USER`: MQTT username
+- `--mqtt-password PASS`: MQTT password
+- `--mqtt-topic-prefix PREFIX`: MQTT topic prefix (default: cpu-loader)
+- `--mqtt-client-id ID`: MQTT client ID (default: cpu-loader)
+
 ### WebUI
 
 Open your browser and navigate to `http://localhost:8000`
@@ -130,6 +147,88 @@ curl -X POST http://localhost:8000/api/threads \
 
 Once the server is running, visit `http://localhost:8000/docs` for interactive API documentation powered by Swagger UI.
 
+## MQTT Publishing
+
+CPU Loader can publish real-time CPU metrics and load control settings to an MQTT broker for integration with home automation systems, monitoring tools, or custom applications.
+
+### MQTT Topics
+
+The application publishes to two topics:
+
+1. **`{prefix}/cpu_metrics`**: Published every second with current CPU utilization
+   ```json
+   {
+     "total_cpu_percent": 25.5,
+     "per_cpu_percent": [25.0, 26.0, 25.3, 25.7]
+   }
+   ```
+
+2. **`{prefix}/load_settings`**: Published when load settings change (retained message)
+   ```json
+   {
+     "num_threads": 4,
+     "loads": {"0": 25.0, "1": 25.0, "2": 25.0, "3": 25.0},
+     "average_load": 25.0
+   }
+   ```
+
+### Configuration
+
+MQTT can be configured using environment variables or command-line arguments. Command-line arguments take precedence over environment variables.
+
+#### Using Environment Variables
+
+```bash
+export MQTT_BROKER_HOST=mqtt.example.com
+export MQTT_BROKER_PORT=1883
+export MQTT_USERNAME=myuser
+export MQTT_PASSWORD=mypassword
+export MQTT_TOPIC_PREFIX=cpu-loader
+export MQTT_CLIENT_ID=cpu-loader-001
+
+uv run src/main.py
+```
+
+#### Using Command-Line Arguments
+
+```bash
+uv run src/main.py \
+  --mqtt-broker-host mqtt.example.com \
+  --mqtt-broker-port 1883 \
+  --mqtt-username myuser \
+  --mqtt-password mypassword \
+  --mqtt-topic-prefix cpu-loader \
+  --mqtt-client-id cpu-loader-001
+```
+
+#### Testing with Mosquitto
+
+To test MQTT publishing locally:
+
+```bash
+# Install mosquitto
+sudo apt-get install mosquitto mosquitto-clients
+
+# Start CPU Loader with MQTT
+uv run src/main.py --mqtt-broker-host localhost
+
+# Subscribe to all topics (in another terminal)
+mosquitto_sub -h localhost -t "cpu-loader/#" -v
+```
+
+### MQTT Settings
+
+| Setting | Environment Variable | CLI Argument | Default | Description |
+|---------|---------------------|--------------|---------|-------------|
+| Broker Host | `MQTT_BROKER_HOST` | `--mqtt-broker-host` | None | MQTT broker hostname or IP |
+| Broker Port | `MQTT_BROKER_PORT` | `--mqtt-broker-port` | 1883 | MQTT broker port |
+| Username | `MQTT_USERNAME` | `--mqtt-username` | None | MQTT authentication username |
+| Password | `MQTT_PASSWORD` | `--mqtt-password` | None | MQTT authentication password |
+| Topic Prefix | `MQTT_TOPIC_PREFIX` | `--mqtt-topic-prefix` | cpu-loader | Prefix for all MQTT topics |
+| Client ID | `MQTT_CLIENT_ID` | `--mqtt-client-id` | cpu-loader | MQTT client identifier |
+
+**Note:** If no MQTT broker host is configured, MQTT publishing will be disabled and the application will function normally without it.
+
 ## Example Script
 
 An example script (`src/example.py`) is provided to demonstrate programmatic control:
@@ -154,6 +253,7 @@ The example demonstrates:
 - **src/cpu_loader_core.c**: High-performance C implementation using pthreads for CPU load generation
 - **src/cpu_loader.py**: Python wrapper providing a clean API to the C extension
 - **src/main.py**: FastAPI application with REST API and embedded WebUI
+- **src/mqtt_publisher.py**: MQTT client for publishing metrics and settings
 - **Threading Model**: Native pthreads for maximum efficiency and precise timing
 - **Load Algorithm**: High-resolution busy-wait loops with nanosecond precision
 
@@ -163,6 +263,7 @@ The example demonstrates:
 - FastAPI 0.115.0+
 - Uvicorn 0.32.0+
 - Pydantic 2.10.0+
+- paho-mqtt 2.1.0+ (for MQTT publishing)
 - C compiler (gcc or clang) for building the extension
 
 ## Use Cases
@@ -172,6 +273,8 @@ The example demonstrates:
 - **Thermal Testing**: Check cooling system effectiveness
 - **Power Consumption Analysis**: Measure power usage at different load levels
 - **Benchmarking**: Create reproducible load scenarios
+- **IoT Integration**: Integrate with Home Assistant, Node-RED, or other MQTT-based systems
+- **Monitoring**: Feed CPU metrics into monitoring dashboards via MQTT
 
 ## Development
 
