@@ -39,7 +39,7 @@ jobs:
           cat pyproject.toml | grep version
 
       - name: Upload updated pyproject.toml
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: pyproject-toml
           path: pyproject.toml
@@ -82,7 +82,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Download updated pyproject.toml
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: pyproject-toml
           path: .
@@ -102,7 +102,7 @@ jobs:
           CIBW_BUILD_VERBOSITY: 1
           CIBW_TEST_COMMAND: python -c "from cpu_loader import cpu_loader_core; print('Import successful')"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.arch }}
           path: ./wheelhouse/*.whl
@@ -115,7 +115,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Download updated pyproject.toml
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: pyproject-toml
           path: .
@@ -131,7 +131,7 @@ jobs:
       - name: Build sdist
         run: uvx --from build pyproject-build --sdist
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: sdist
           path: dist/*.tar.gz
@@ -144,13 +144,13 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           pattern: wheels-*
           path: dist
           merge-multiple: true
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: sdist
           path: dist
@@ -172,13 +172,13 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           pattern: wheels-*
           path: dist
           merge-multiple: true
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: sdist
           path: dist
