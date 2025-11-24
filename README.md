@@ -5,28 +5,49 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/cpu-loader)](https://pypi.org/project/cpu-loader/)
 [![License](https://img.shields.io/github/license/the78mole/cpu-loader)](https://github.com/the78mole/cpu-loader/blob/main/LICENSE)
 
-A tool to generate CPU load on a system with runtime configuration through a WebUI and REST API.
+A high-performance CPU load generator with **per-thread control** through an intuitive WebUI and REST API. Built with a native C extension using pthreads for accurate, nanosecond-precision load generation.
 
-## Features
+## ✨ Key Features
 
-- 🔥 **Controllable CPU Load**: Generate precise CPU load per thread
-- 🎛️ **Per-Thread Control**: Individual sliders for each CPU thread
-- 🚀 **REST API**: Full programmatic control via HTTP endpoints
-- 🌐 **Modern WebUI**: Beautiful, responsive interface for real-time control
-- ⚡ **Instant Response**: Changes take effect immediately
-- 📊 **Live Monitoring**: View active threads and average load in real-time
+- **🎯 Precise Per-Thread Control**: Set individual CPU load (0-100%) for each core independently
+- **⚡ High Performance**: Native C implementation with pthreads ensures accurate load generation
+- **📊 Real-Time Monitoring**: Live WebSocket updates showing actual CPU usage via `psutil`
+- **🎛️ Interactive WebUI**: Beautiful gradient interface with sliders and visual feedback
+- **🚀 REST API**: Complete programmatic control for automation and testing
+- **📱 Responsive Design**: Works seamlessly on desktop and mobile devices
+- **🔄 Instant Updates**: Changes take effect immediately with sub-second response time
 
-## Screenshots
+## 🖼️ Screenshots
 
-### WebUI Interface
-![CPU Loader Control - 25% Load](https://github.com/user-attachments/assets/94f5a1a1-4328-46af-9155-e7d50cc8ba0e)
-*Individual thread control with sliders and preset buttons*
+### Desktop Interface
+<table>
+  <tr>
+    <td width="50%">
+      <img src="screenshots/01-initial-view.png" alt="Initial view with zero load">
+      <p align="center"><em>Clean interface showing all CPU threads at idle</em></p>
+    </td>
+    <td width="50%">
+      <img src="screenshots/02-with-load.png" alt="Mixed load across threads">
+      <p align="center"><em>Different load levels: 50%, 75%, and 25% on individual threads</em></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="screenshots/03-live-metrics.png" alt="Live CPU metrics updating">
+      <p align="center"><em>Real-time metrics showing actual CPU usage with color-coded bars</em></p>
+    </td>
+    <td width="50%">
+      <img src="screenshots/04-mobile-view.png" alt="Mobile responsive view">
+      <p align="center"><em>Fully responsive mobile interface</em></p>
+    </td>
+  </tr>
+</table>
 
-![CPU Loader Control - 50% Load](https://github.com/user-attachments/assets/bcab1f61-03a6-48ea-83b7-4402ec0d1389)
-*Setting all threads to 50% load*
-
-![CPU Loader Control - 100% Load](https://github.com/user-attachments/assets/542afa1c-16da-4aff-a021-1e905e6f3372)
-*Maximum load across all threads*
+### Features Shown
+- **Visual Load Bars**: Green progress bars show target load, blue bars display actual CPU usage
+- **Real-Time Updates**: WebSocket connection provides live metrics every second
+- **Preset Buttons**: Quick-set options (0%, 25%, 50%, 75%, 100%) for all threads
+- **Smooth Gradients**: Modern UI with purple-to-blue gradient design
 
 ## Installation
 
