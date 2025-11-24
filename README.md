@@ -1,5 +1,10 @@
 # CPU Loader
 
+[![CI](https://github.com/the78mole/cpu-loader/actions/workflows/ci.yml/badge.svg)](https://github.com/the78mole/cpu-loader/actions/workflows/ci.yml)
+[![Build Wheels](https://github.com/the78mole/cpu-loader/actions/workflows/build-wheels.yml/badge.svg)](https://github.com/the78mole/cpu-loader/actions/workflows/build-wheels.yml)
+[![Python Version](https://img.shields.io/pypi/pyversions/cpu-loader)](https://pypi.org/project/cpu-loader/)
+[![License](https://img.shields.io/github/license/the78mole/cpu-loader)](https://github.com/the78mole/cpu-loader/blob/main/LICENSE)
+
 A tool to generate CPU load on a system with runtime configuration through a WebUI and REST API.
 
 ## Features
@@ -25,6 +30,16 @@ A tool to generate CPU load on a system with runtime configuration through a Web
 
 ## Installation
 
+### From Pre-built Wheels (Recommended)
+
+Pre-compiled wheels are available for Linux (x86_64, ARM64) and macOS (x86_64, ARM64):
+
+```bash
+pip install cpu-loader
+```
+
+### From Source
+
 1. Clone the repository:
 ```bash
 git clone https://github.com/the78mole/cpu-loader.git
@@ -42,6 +57,13 @@ This will compile the high-performance C extension for efficient CPU load genera
 ```bash
 pre-commit install
 ```
+
+4. (Optional) Set up commit message template for semantic versioning:
+```bash
+git config commit.template .gitmessage
+```
+
+See [COMMIT_MESSAGE_FORMAT.md](COMMIT_MESSAGE_FORMAT.md) for commit message guidelines.
 
 ## Usage
 
@@ -169,6 +191,42 @@ pre-commit run --all-files
 
 The hooks will run automatically on `git commit` after installation.
 
+### Building and Publishing Releases
+
+The project uses **automatic semantic versioning** with GitHub Actions:
+
+#### Versioning Rules
+
+Versions are automatically determined based on commit messages:
+
+- **Patch bump** (0.0.X): Every commit to main
+- **Minor bump** (0.X.0): Commits prefixed with `feat:`
+  ```bash
+  git commit -m "feat: add new CPU monitoring feature"
+  ```
+- **Major bump** (X.0.0): Commits with `major:`, `breaking:`, or `BREAKING CHANGE:`
+  ```bash
+  git commit -m "major: redesign API interface"
+  git commit -m "breaking: remove deprecated endpoints"
+  ```
+
+#### Release Process
+
+1. **Commit and push to main**:
+   ```bash
+   git add .
+   git commit -m "feat: add WebSocket support"
+   git push origin main
+   ```
+
+2. **Automated workflow**:
+   - Version is automatically calculated using semantic versioning
+   - Wheels are built for Linux (x86_64, ARM64) and macOS (x86_64, ARM64)
+   - Python versions: 3.8, 3.9, 3.10, 3.11, 3.12
+   - Source distribution (sdist) is created
+   - All artifacts are published to PyPI
+   - A GitHub Release is created with version tag and artifacts
+
 ## License
 
-This project is provided as-is for testing and development purposes.
+MIT License - see [LICENSE](LICENSE) file for details.
