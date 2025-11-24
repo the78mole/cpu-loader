@@ -71,13 +71,13 @@ jobs:
             arch: aarch64
             cibw_archs: "aarch64"
           # macOS x86_64
-        #   - os: macos-13
-        #     arch: x86_64
-        #     cibw_archs: "x86_64"
-        #   # macOS ARM64
-        #   - os: macos-14
-        #     arch: arm64
-        #     cibw_archs: "arm64"
+          - os: macos-13
+            arch: x86_64
+            cibw_archs: "x86_64"
+          # macOS ARM64
+          - os: macos-14
+            arch: arm64
+            cibw_archs: "arm64"
 
     steps:
       - uses: actions/checkout@v4
@@ -101,7 +101,7 @@ jobs:
           CIBW_SKIP: "*-musllinux_*"
           CIBW_ARCHS: ${{ matrix.cibw_archs }}
           CIBW_BUILD_VERBOSITY: 1
-          CIBW_TEST_COMMAND: python -c "from cpu_loader import cpu_loader_core; print('Import successful')"
+          CIBW_TEST_COMMAND: python -c "import cpu_loader_core; print('Import successful')"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -211,4 +211,4 @@ jobs:
             This release includes pre-built wheels for:
             - Linux: x86_64, ARM64
             - macOS: x86_64 (Intel), ARM64 (Apple Silicon)
-            - Python: 3.8, 3.9, 3.10, 3.11, 3.12
+            - Python: 3.9, 3.10, 3.11, 3.12
