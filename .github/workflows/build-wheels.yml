@@ -107,6 +107,7 @@ jobs:
           CIBW_SKIP: "*-musllinux_*"
           CIBW_ARCHS: ${{ matrix.cibw_archs }}
           CIBW_BUILD_VERBOSITY: 1
+          CIBW_TEST_SKIP: "cp38-macosx_*:arm64"
           CIBW_TEST_COMMAND: python -c "from cpu_loader import cpu_loader_core; print('Import successful')"
 
       - uses: actions/upload-artifact@v5
