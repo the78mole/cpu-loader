@@ -33,6 +33,7 @@ dependencies = [
     "requests==2.32.3",
     "psutil>=5.9.0",
     "websockets>=12.0",
+    "paho-mqtt>=2.1.0",
 ]
 
 [project.scripts]
@@ -50,4 +51,4 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["cpu_loader", "main", "example"]
+py-modules = ["cpu_loader", "main", "example", "mqtt_publisher"]
