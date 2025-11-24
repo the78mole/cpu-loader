@@ -199,7 +199,7 @@ jobs:
 
       - name: Create Release
         if: ${{ !env.ACT }}
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.version.outputs.version_tag }}
           name: Release ${{ needs.version.outputs.version }}
