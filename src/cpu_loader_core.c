@@ -38,14 +38,14 @@ static inline void busy_wait_ns(long long ns) {
 
 static void *worker_thread(void *arg) {
     WorkerThread *worker = (WorkerThread *)arg;
-    
+
     while (!worker->stop) {
         long long cycle_start = get_time_ns();
-        
+
         pthread_mutex_lock(&worker->lock);
         double load = worker->load;
         pthread_mutex_unlock(&worker->lock);
-        
+
         if (load <= 0.0) {
             // No load, sleep for the full cycle
             struct timespec sleep_time = {0, CYCLE_TIME_NS};
@@ -56,14 +56,14 @@ static void *worker_thread(void *arg) {
         } else {
             // Partial load
             long long work_time_ns = (long long)(load * CYCLE_TIME_NS);
-            
+
             // Busy-wait for work time
             busy_wait_ns(work_time_ns);
-            
+
             // Sleep for the rest of the cycle
             long long elapsed = get_time_ns() - cycle_start;
             long long remaining = CYCLE_TIME_NS - elapsed;
-            
+
             if (remaining > 1000000) {  // > 1ms
                 // Sleep for most of the remaining time
                 struct timespec sleep_time;
@@ -73,25 +73,25 @@ static void *worker_thread(void *arg) {
             }
         }
     }
-    
+
     return NULL;
 }
 
 // Initialize the CPU loader with specified number of threads
 static PyObject *init_loader(PyObject *self, PyObject *args) {
     int new_num_threads;
-    
+
     if (!PyArg_ParseTuple(args, "i", &new_num_threads)) {
         return NULL;
     }
-    
+
     if (new_num_threads <= 0) {
         PyErr_SetString(PyExc_ValueError, "Number of threads must be positive");
         return NULL;
     }
-    
+
     pthread_mutex_lock(&global_lock);
-    
+
     // Stop existing threads if any
     if (workers != NULL) {
         for (int i = 0; i < num_threads; i++) {
@@ -103,11 +103,11 @@ static PyObject *init_loader(PyObject *self, PyObject *args) {
         }
         free(workers);
     }
-    
+
     // Allocate new workers
     num_threads = new_num_threads;
     workers = calloc(num_threads, sizeof(WorkerThread));
-    
+
     // Start threads
     for (int i = 0; i < num_threads; i++) {
         workers[i].thread_id = i;
@@ -115,7 +115,7 @@ static PyObject *init_loader(PyObject *self, PyObject *args) {
         workers[i].running = false;
         workers[i].stop = false;
         pthread_mutex_init(&workers[i].lock, NULL);
-        
+
         if (pthread_create(&workers[i].thread, NULL, worker_thread, &workers[i]) != 0) {
             pthread_mutex_unlock(&global_lock);
             PyErr_SetString(PyExc_RuntimeError, "Failed to create thread");
@@ -123,9 +123,9 @@ static PyObject *init_loader(PyObject *self, PyObject *args) {
         }
         workers[i].running = true;
     }
-    
+
     pthread_mutex_unlock(&global_lock);
-    
+
     Py_RETURN_NONE;
 }
 
@@ -133,78 +133,78 @@ static PyObject *init_loader(PyObject *self, PyObject *args) {
 static PyObject *set_thread_load(PyObject *self, PyObject *args) {
     int thread_id;
     double load_percent;
-    
+
     if (!PyArg_ParseTuple(args, "id", &thread_id, &load_percent)) {
         return NULL;
     }
-    
+
     pthread_mutex_lock(&global_lock);
-    
+
     if (thread_id < 0 || thread_id >= num_threads) {
         pthread_mutex_unlock(&global_lock);
         PyErr_SetString(PyExc_ValueError, "Invalid thread ID");
         return NULL;
     }
-    
+
     if (load_percent < 0.0 || load_percent > 100.0) {
         pthread_mutex_unlock(&global_lock);
         PyErr_SetString(PyExc_ValueError, "Load must be between 0 and 100");
         return NULL;
     }
-    
+
     pthread_mutex_lock(&workers[thread_id].lock);
     workers[thread_id].load = load_percent / 100.0;
     pthread_mutex_unlock(&workers[thread_id].lock);
-    
+
     pthread_mutex_unlock(&global_lock);
-    
+
     Py_RETURN_NONE;
 }
 
 // Get load for a specific thread
 static PyObject *get_thread_load(PyObject *self, PyObject *args) {
     int thread_id;
-    
+
     if (!PyArg_ParseTuple(args, "i", &thread_id)) {
         return NULL;
     }
-    
+
     pthread_mutex_lock(&global_lock);
-    
+
     if (thread_id < 0 || thread_id >= num_threads) {
         pthread_mutex_unlock(&global_lock);
         PyErr_SetString(PyExc_ValueError, "Invalid thread ID");
         return NULL;
     }
-    
+
     pthread_mutex_lock(&workers[thread_id].lock);
     double load = workers[thread_id].load * 100.0;
     pthread_mutex_unlock(&workers[thread_id].lock);
-    
+
     pthread_mutex_unlock(&global_lock);
-    
+
     return PyFloat_FromDouble(load);
 }
 
 // Get all thread loads
 static PyObject *get_all_loads(PyObject *self, PyObject *args) {
     pthread_mutex_lock(&global_lock);
-    
+
     PyObject *dict = PyDict_New();
     for (int i = 0; i < num_threads; i++) {
         pthread_mutex_lock(&workers[i].lock);
         double load = workers[i].load * 100.0;
         pthread_mutex_unlock(&workers[i].lock);
-        
+
         PyObject *key = PyLong_FromLong(i);
         PyObject *value = PyFloat_FromDouble(load);
         PyDict_SetItem(dict, key, value);
         Py_DECREF(key);
         Py_DECREF(value);
     }
-    
+
     pthread_mutex_unlock(&global_lock);
-    
+
     return dict;
 }
 
@@ -213,14 +213,14 @@ static PyObject *get_num_threads(PyObject *self, PyObject *args) {
     pthread_mutex_lock(&global_lock);
     int n = num_threads;
     pthread_mutex_unlock(&global_lock);
-    
+
     return PyLong_FromLong(n);
 }
 
 // Shutdown all threads
 static PyObject *shutdown_loader(PyObject *self, PyObject *args) {
     pthread_mutex_lock(&global_lock);
-    
+
     if (workers != NULL) {
         for (int i = 0; i < num_threads; i++) {
             workers[i].stop = true;
@@ -233,9 +233,9 @@ static PyObject *shutdown_loader(PyObject *self, PyObject *args) {
         workers = NULL;
         num_threads = 0;
     }
-    
+
     pthread_mutex_unlock(&global_lock);
-    
+
     Py_RETURN_NONE;
 }
 

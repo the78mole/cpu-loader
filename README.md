@@ -38,6 +38,11 @@ uv pip install -e .
 
 This will compile the high-performance C extension for efficient CPU load generation.
 
+3. (Optional) Set up pre-commit hooks for development:
+```bash
+pre-commit install
+```
+
 ## Usage
 
 ### Starting the Server
@@ -145,6 +150,24 @@ The example demonstrates:
 - **Thermal Testing**: Check cooling system effectiveness
 - **Power Consumption Analysis**: Measure power usage at different load levels
 - **Benchmarking**: Create reproducible load scenarios
+
+## Development
+
+### Pre-commit Hooks
+
+This project uses pre-commit hooks to ensure code quality. The hooks include:
+
+- **Code Formatting**: Black and isort for consistent Python formatting
+- **Linting**: Flake8 for code quality checks
+- **Type Checking**: Mypy for static type analysis
+- **General Checks**: Trailing whitespace, end-of-file fixes, YAML/JSON/TOML validation
+
+To run pre-commit manually on all files:
+```bash
+pre-commit run --all-files
+```
+
+The hooks will run automatically on `git commit` after installation.
 
 ## License
 

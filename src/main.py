@@ -2,29 +2,36 @@
 CPU Loader FastAPI Application
 Provides REST API and WebUI for controlling CPU load.
 """
+import asyncio
 from contextlib import asynccontextmanager
+from typing import Dict, List, Set
+
+import psutil
+import uvicorn
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
-from typing import Dict, List, Set
-import uvicorn
-import psutil
-import asyncio
 
 from cpu_loader import CPULoader
 
 
 # Pydantic models for request/response validation
 class ThreadLoadRequest(BaseModel):
-    load_percent: float = Field(..., ge=0, le=100, description="Load percentage (0-100)")
+    load_percent: float = Field(
+        ..., ge=0, le=100, description="Load percentage (0-100)"
+    )
 
 
 class AllThreadsLoadRequest(BaseModel):
-    load_percent: float = Field(..., ge=0, le=100, description="Load percentage (0-100)")
+    load_percent: float = Field(
+        ..., ge=0, le=100, description="Load percentage (0-100)"
+    )
 
 
 class ThreadCountRequest(BaseModel):
-    num_threads: int = Field(..., gt=0, description="Number of threads (must be positive)")
+    num_threads: int = Field(
+        ..., gt=0, description="Number of threads (must be positive)"
+    )
 
 
 class ThreadsStatusResponse(BaseModel):
@@ -47,23 +54,23 @@ async def cpu_monitoring_loop():
     """Background task that monitors CPU usage and broadcasts to all WebSocket clients."""
     # Initialize psutil
     psutil.cpu_percent(interval=None, percpu=True)
-    
+
     while True:
         try:
             # Wait for 1 second
             await asyncio.sleep(1.0)
-            
+
             # Get CPU metrics (non-blocking after first call)
             per_cpu = psutil.cpu_percent(interval=None, percpu=True)
             total_cpu = sum(per_cpu) / len(per_cpu) if per_cpu else 0.0
-            
+
             # Prepare message
             message = {
                 "type": "cpu_metrics",
                 "total_cpu_percent": round(total_cpu, 1),
-                "per_cpu_percent": [round(cpu, 1) for cpu in per_cpu]
+                "per_cpu_percent": [round(cpu, 1) for cpu in per_cpu],
             }
-            
+
             # Broadcast to all connected clients
             if websocket_connections:
                 disconnected = set()
@@ -72,7 +79,7 @@ async def cpu_monitoring_loop():
                         await websocket.send_json(message)
                     except Exception:
                         disconnected.add(websocket)
-                
+
                 # Remove disconnected clients
                 websocket_connections.difference_update(disconnected)
         except Exception as e:
@@ -103,7 +110,7 @@ app = FastAPI(
     title="CPU Loader API",
     description="Control CPU load generation with configurable threads",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 
@@ -306,7 +313,7 @@ async def get_webui():
     <div class="container">
         <h1>🔥 CPU Loader Control</h1>
         <p class="subtitle">Control CPU load per thread in real-time</p>
-        
+
         <div class="status">
             <div class="status-item">
                 <strong>Active Threads:</strong> <span id="thread-count">-</span>
@@ -315,7 +322,7 @@ async def get_webui():
                 <strong>Target Load:</strong> <span id="avg-load">-</span>%
             </div>
         </div>
-        
+
         <div class="cpu-metrics">
             <h3>📊 Real-Time CPU Usage</h3>
             <div class="cpu-bar-container">
@@ -329,10 +336,10 @@ async def get_webui():
             </div>
             <div id="per-cpu-bars"></div>
         </div>
-        
+
         <div class="error" id="error-message"></div>
         <div class="success" id="success-message"></div>
-        
+
         <div class="preset-buttons">
             <button class="preset-btn" onclick="setAllLoads(0)">0%</button>
             <button class="preset-btn" onclick="setAllLoads(10)">10%</button>
@@ -342,7 +349,7 @@ async def get_webui():
             <button class="preset-btn" onclick="setAllLoads(90)">90%</button>
             <button class="preset-btn" onclick="setAllLoads(100)">100%</button>
         </div>
-        
+
         <div id="thread-controls" class="thread-controls">
             <!-- Thread controls will be dynamically inserted here -->
         </div>
@@ -357,24 +364,24 @@ async def get_webui():
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.host}/ws/cpu-metrics`;
-            
+
             ws = new WebSocket(wsUrl);
-            
+
             ws.onopen = () => {
                 console.log('WebSocket connected');
             };
-            
+
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 if (data.type === 'cpu_metrics') {
                     updateCPUMetrics(data);
                 }
             };
-            
+
             ws.onerror = (error) => {
                 console.error('WebSocket error:', error);
             };
-            
+
             ws.onclose = () => {
                 console.log('WebSocket disconnected, reconnecting...');
                 setTimeout(connectWebSocket, 2000);
@@ -386,7 +393,7 @@ async def get_webui():
             const totalCpu = data.total_cpu_percent;
             document.getElementById('total-cpu-value').textContent = `${totalCpu}%`;
             document.getElementById('total-cpu-bar').style.width = `${totalCpu}%`;
-            
+
             // Update per-CPU bars
             const perCpuContainer = document.getElementById('per-cpu-bars');
             if (data.per_cpu_percent.length !== numCPUs) {
@@ -408,7 +415,7 @@ async def get_webui():
                     perCpuContainer.insertAdjacentHTML('beforeend', barHtml);
                 });
             }
-            
+
             // Update values
             data.per_cpu_percent.forEach((cpu, index) => {
                 document.getElementById(`cpu-${index}-value`).textContent = `${cpu}%`;
@@ -420,17 +427,17 @@ async def get_webui():
             try {
                 const response = await fetch('/api/threads');
                 const data = await response.json();
-                
+
                 numThreads = data.num_threads;
                 document.getElementById('thread-count').textContent = numThreads;
-                
+
                 // Calculate average load
                 const loads = Object.values(data.loads);
-                const avgLoad = loads.length > 0 
+                const avgLoad = loads.length > 0
                     ? (loads.reduce((a, b) => a + b, 0) / loads.length).toFixed(1)
                     : 0;
                 document.getElementById('avg-load').textContent = avgLoad;
-                
+
                 // Update or create thread controls
                 updateThreadControls(data.loads);
             } catch (error) {
@@ -440,11 +447,11 @@ async def get_webui():
 
         function updateThreadControls(loads) {
             const container = document.getElementById('thread-controls');
-            
+
             // If number of threads changed, recreate all controls
             if (container.children.length !== Object.keys(loads).length) {
                 container.innerHTML = '';
-                
+
                 for (let i = 0; i < Object.keys(loads).length; i++) {
                     const control = createThreadControl(i, loads[i]);
                     container.appendChild(control);
@@ -468,10 +475,12 @@ async def get_webui():
             div.innerHTML = `
                 <div class="thread-header">
                     <span class="thread-label">Thread ${threadId}</span>
-                    <span class="thread-value" id="value-${threadId}">${initialLoad.toFixed(0)}%</span>
+                    <span class="thread-value" id="value-${threadId}">
+                        ${initialLoad.toFixed(0)}%
+                    </span>
                 </div>
                 <div class="slider-container">
-                    <input type="range" min="0" max="100" value="${initialLoad}" 
+                    <input type="range" min="0" max="100" value="${initialLoad}"
                            class="slider" id="slider-${threadId}"
                            oninput="updateThreadLoad(${threadId}, this.value)">
                     <div class="slider-labels">
@@ -489,12 +498,12 @@ async def get_webui():
         async function updateThreadLoad(threadId, loadPercent) {
             // Update UI immediately for responsiveness
             document.getElementById(`value-${threadId}`).textContent = loadPercent + '%';
-            
+
             // Debounce API calls
             if (updateTimeout) {
                 clearTimeout(updateTimeout);
             }
-            
+
             updateTimeout = setTimeout(async () => {
                 try {
                     const response = await fetch(`/api/threads/${threadId}/load`, {
@@ -504,11 +513,11 @@ async def get_webui():
                         },
                         body: JSON.stringify({ load_percent: parseFloat(loadPercent) })
                     });
-                    
+
                     if (!response.ok) {
                         throw new Error('Failed to update thread load');
                     }
-                    
+
                     // Refresh status to get accurate average
                     await fetchStatus();
                 } catch (error) {
@@ -526,13 +535,13 @@ async def get_webui():
                     },
                     body: JSON.stringify({ load_percent: loadPercent })
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to set loads');
                 }
-                
+
                 showSuccess(`All threads set to ${loadPercent}%`);
-                
+
                 // Update UI
                 await fetchStatus();
             } catch (error) {
@@ -573,8 +582,7 @@ async def get_webui():
 async def get_threads_status():
     """Get the current status of all threads."""
     return ThreadsStatusResponse(
-        num_threads=cpu_loader.get_num_threads(),
-        loads=cpu_loader.get_all_loads()
+        num_threads=cpu_loader.get_num_threads(), loads=cpu_loader.get_all_loads()
     )
 
 
@@ -599,10 +607,7 @@ async def get_cpu_metrics():
     """Get current CPU utilization metrics."""
     per_cpu = psutil.cpu_percent(interval=0.1, percpu=True)
     total_cpu = psutil.cpu_percent(interval=0)
-    return CPUMetricsResponse(
-        total_cpu_percent=total_cpu,
-        per_cpu_percent=per_cpu
-    )
+    return CPUMetricsResponse(total_cpu_percent=total_cpu, per_cpu_percent=per_cpu)
 
 
 @app.post("/api/threads")
@@ -613,7 +618,7 @@ async def set_thread_count(request: ThreadCountRequest):
         return {
             "status": "success",
             "num_threads": request.num_threads,
-            "message": f"Thread count set to {request.num_threads}"
+            "message": f"Thread count set to {request.num_threads}",
         }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -628,7 +633,7 @@ async def set_thread_load(thread_id: int, request: ThreadLoadRequest):
             "status": "success",
             "thread_id": thread_id,
             "load_percent": request.load_percent,
-            "message": f"Thread {thread_id} load set to {request.load_percent}%"
+            "message": f"Thread {thread_id} load set to {request.load_percent}%",
         }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -643,7 +648,7 @@ async def set_all_thread_loads(request: AllThreadsLoadRequest):
             "status": "success",
             "load_percent": request.load_percent,
             "num_threads": cpu_loader.get_num_threads(),
-            "message": f"All threads set to {request.load_percent}%"
+            "message": f"All threads set to {request.load_percent}%",
         }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
