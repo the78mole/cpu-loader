@@ -69,12 +69,19 @@ jobs:
           - os: ubuntu-latest
             arch: aarch64
             cibw_archs: "aarch64"
-          # macOS x86_64
-          - os: macos-13
+
+          # macOS x86_64 (Intel) - Is now built on Apple silicon
+          - os: macos-14
             arch: x86_64
             cibw_archs: "x86_64"
-          # macOS ARM64
-          - os: macos-14
+
+          # macOS x86_64 (Intel) - Is now built on Apple silicon
+          - os: macos-15
+            arch: x86_64
+            cibw_archs: "x86_64"
+
+          # macOS ARM64 (Apple silicon)
+          - os: macos-15
             arch: arm64
             cibw_archs: "arm64"
 

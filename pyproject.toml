@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "A tool to generate CPU load on a system with runtime configuration through a WebUI and REST API"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {text = "MIT"}
+license = {file = "LICENSE"}
 authors = [
     {name = "the78mole", email = "the78mole@users.noreply.github.com"}
 ]
@@ -13,7 +13,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
     "Programming Language :: Python :: 3",
