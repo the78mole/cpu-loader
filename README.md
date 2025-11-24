@@ -20,13 +20,19 @@ A tool to generate CPU load on a system with runtime configuration through a Web
 
 ## 🖼️ Screenshots
 
-### Desktop Interface
+### Interface Screenshots
 <table>
   <tr>
     <td width="50%">
       <img src="https://raw.githubusercontent.com/the78mole/cpu-loader/main/screenshots/01-initial-view.png" alt="Initial view with zero load">
       <p align="center"><em>Clean interface showing all CPU threads at idle</em></p>
     </td>
+    <td width="50%" rowspan="3" valign="top">
+      <img src="https://raw.githubusercontent.com/the78mole/cpu-loader/main/screenshots/04-mobile-view.png" alt="Mobile responsive view">
+      <p align="center"><em>Fully responsive mobile interface</em></p>
+    </td>
+  </tr>
+  <tr>
     <td width="50%">
       <img src="https://raw.githubusercontent.com/the78mole/cpu-loader/main/screenshots/02-with-load.png" alt="Mixed load across threads">
       <p align="center"><em>Different load levels: 50%, 75%, and 25% on individual threads</em></p>
@@ -36,10 +42,6 @@ A tool to generate CPU load on a system with runtime configuration through a Web
     <td width="50%">
       <img src="https://raw.githubusercontent.com/the78mole/cpu-loader/main/screenshots/03-live-metrics.png" alt="Live CPU metrics updating">
       <p align="center"><em>Real-time metrics showing actual CPU usage with color-coded bars</em></p>
-    </td>
-    <td width="50%">
-      <img src="https://raw.githubusercontent.com/the78mole/cpu-loader/main/screenshots/04-mobile-view.png" alt="Mobile responsive view">
-      <p align="center"><em>Fully responsive mobile interface</em></p>
     </td>
   </tr>
 </table>
