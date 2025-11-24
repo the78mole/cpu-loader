@@ -101,6 +101,25 @@ curl -X POST http://localhost:8000/api/threads \
 
 Once the server is running, visit `http://localhost:8000/docs` for interactive API documentation powered by Swagger UI.
 
+## Example Script
+
+An example script (`example.py`) is provided to demonstrate programmatic control:
+
+```bash
+# Start the server first
+python main.py
+
+# In another terminal, run the example
+python example.py
+```
+
+The example demonstrates:
+- Getting current status
+- Setting all threads to a specific load
+- Gradually increasing load
+- Individual thread control
+- Resetting to idle
+
 ## Architecture
 
 - **cpu_loader.py**: Core CPU load generation engine with thread management
