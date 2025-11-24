@@ -46,13 +46,11 @@ class MQTTPublisher:
         # Get settings from arguments or environment variables
         self.broker_host = broker_host or os.getenv("MQTT_BROKER_HOST")
         self.broker_port = int(
-            broker_port or os.getenv("MQTT_BROKER_PORT", "1883")
+            broker_port or int(os.getenv("MQTT_BROKER_PORT", "1883"))
         )
         self.username = username or os.getenv("MQTT_USERNAME")
         self.password = password or os.getenv("MQTT_PASSWORD")
-        self.topic_prefix = topic_prefix or os.getenv(
-            "MQTT_TOPIC_PREFIX", "cpu-loader"
-        )
+        self.topic_prefix = topic_prefix or os.getenv("MQTT_TOPIC_PREFIX", "cpu-loader")
         self.client_id = client_id or os.getenv("MQTT_CLIENT_ID", "cpu-loader")
 
         self.client: Optional[mqtt.Client] = None
@@ -124,9 +122,7 @@ class MQTTPublisher:
 
         try:
             # Calculate average load
-            avg_load = (
-                sum(loads.values()) / len(loads) if loads else 0.0
-            )
+            avg_load = sum(loads.values()) / len(loads) if loads else 0.0
 
             # Prepare payload
             payload = {
@@ -148,9 +144,7 @@ class MQTTPublisher:
         except Exception as e:
             logger.error(f"Failed to publish load settings: {e}")
 
-    def publish_cpu_metrics(
-        self, total_cpu_percent: float, per_cpu_percent: list
-    ):
+    def publish_cpu_metrics(self, total_cpu_percent: float, per_cpu_percent: list):
         """
         Publish CPU metrics to MQTT.
 
