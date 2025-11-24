@@ -37,7 +37,7 @@ dependencies = [
 ]
 
 [project.scripts]
-cpu-loader = "main:run"
+cpu-loader = "cpu_loader.__main__:run"
 
 [project.urls]
 Homepage = "https://github.com/the78mole/cpu-loader"
@@ -51,4 +51,4 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["cpu_loader", "main", "example", "mqtt_publisher"]
+packages = ["cpu_loader"]

@@ -7,7 +7,7 @@ import multiprocessing
 from typing import Dict
 
 try:
-    import cpu_loader_core
+    from cpu_loader import cpu_loader_core  # type: ignore[attr-defined]
 except ImportError:
     raise ImportError(
         "cpu_loader_core module not found. Please build the C extension with: "

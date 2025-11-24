@@ -9,8 +9,8 @@ if platform.system() != 'Windows':
     extra_link_args = ['-pthread']
 
 module = Extension(
-    'cpu_loader_core',
-    sources=['src/cpu_loader_core.c'],
+    'cpu_loader.cpu_loader_core',
+    sources=['src/cpu_loader/cpu_loader_core.c'],
     extra_compile_args=extra_compile_args,
     extra_link_args=extra_link_args,
 )
