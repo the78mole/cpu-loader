@@ -16,6 +16,52 @@ except ImportError:
     )
 
 
+class ComputationType:
+    """Enumeration for different computation types."""
+
+    BUSY_WAIT = 0
+    PI_CALCULATION = 1
+    PRIME_NUMBERS = 2
+    MATRIX_MULTIPLY = 3
+    FIBONACCI = 4
+
+    @classmethod
+    def from_string(cls, compute_str: str) -> int:
+        """Convert string representation to computation type integer."""
+        compute_map = {
+            "busy-wait": cls.BUSY_WAIT,
+            "pi": cls.PI_CALCULATION,
+            "primes": cls.PRIME_NUMBERS,
+            "matrix": cls.MATRIX_MULTIPLY,
+            "fibonacci": cls.FIBONACCI,
+        }
+
+        compute_str = compute_str.lower().strip()
+        if compute_str not in compute_map:
+            available = ", ".join(compute_map.keys())
+            raise ValueError(
+                f"Invalid computation type '{compute_str}'. Available: {available}"
+            )
+
+        return compute_map[compute_str]
+
+    @classmethod
+    def to_string(cls, compute_type: int) -> str:
+        """Convert computation type integer to string representation."""
+        type_map = {
+            cls.BUSY_WAIT: "busy-wait",
+            cls.PI_CALCULATION: "pi",
+            cls.PRIME_NUMBERS: "primes",
+            cls.MATRIX_MULTIPLY: "matrix",
+            cls.FIBONACCI: "fibonacci",
+        }
+
+        if compute_type not in type_map:
+            raise ValueError(f"Invalid computation type {compute_type}")
+
+        return type_map[compute_type]
+
+
 class CPULoader:
     """Manages CPU load generation across multiple threads using C extension."""
 
@@ -101,6 +147,45 @@ class CPULoader:
 
         self.num_threads = num_threads
         cpu_loader_core.init_loader(num_threads)
+
+    def set_computation_type(self, compute_type: int):
+        """
+        Set the computation type for CPU load generation.
+
+        Args:
+            compute_type: Computation type (use ComputationType constants)
+        """
+        cpu_loader_core.set_computation_type(compute_type)
+
+    def get_computation_type(self) -> int:
+        """
+        Get the current computation type.
+
+        Returns:
+            Current computation type integer
+        """
+        return cpu_loader_core.get_computation_type()
+
+    def set_computation_type_from_string(self, compute_str: str):
+        """
+        Set the computation type from string representation.
+
+        Args:
+            compute_str: Computation type as string (e.g., 'pi', 'primes',
+                        'matrix', 'fibonacci', 'busy-wait')
+        """
+        compute_type = ComputationType.from_string(compute_str)
+        self.set_computation_type(compute_type)
+
+    def get_computation_type_string(self) -> str:
+        """
+        Get the current computation type as string.
+
+        Returns:
+            Current computation type as string
+        """
+        compute_type = self.get_computation_type()
+        return ComputationType.to_string(compute_type)
 
     def shutdown(self):
         """Shutdown all threads."""

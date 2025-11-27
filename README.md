@@ -11,11 +11,14 @@ A tool to generate CPU load on a system with runtime configuration through a Web
 
 - **🎯 Precise Per-Thread Control**: Set individual CPU load (0-100%) for each core independently
 - **⚡ High Performance**: Native C implementation with pthreads ensures accurate load generation
-- **📊 Real-Time Monitoring**: Live WebSocket updates showing actual CPU usage via `psutil`
+- **🧮 Configurable Algorithms**: Choose between 5 different computation types (busy-wait, PI, primes, matrix, fibonacci)
+- **⏱️ Time-Controlled Execution**: All algorithms respect precise timing for accurate load percentages
+- **📊 Real-Time Monitoring**: Live WebSocket updates showing actual CPU usage and temperature via `psutil`
 - **🎛️ Interactive WebUI**: Beautiful gradient interface with sliders and visual feedback
 - **🚀 REST API**: Complete programmatic control for automation and testing
 - **📱 Responsive Design**: Works seamlessly on desktop and mobile devices
 - **🔄 Instant Updates**: Changes take effect immediately with sub-second response time
+- **🌡️ Temperature Monitoring**: Optional CPU temperature tracking with sensor auto-detection
 - 📡 **MQTT Integration**: Publish metrics and settings to MQTT broker for IoT/monitoring systems
 
 ## 🖼️ Screenshots
@@ -108,12 +111,38 @@ uv run src/main.py --help
 **Available Options:**
 - `--host HOST`: Host to bind the server to (default: 0.0.0.0)
 - `--port PORT`: Port to bind the server to (default: 8000)
+- `--disable-temperature`: Disable CPU temperature monitoring
+- `--computation-type TYPE`: Set computation algorithm (busy-wait, pi, primes, matrix, fibonacci)
 - `--mqtt-broker-host HOST`: MQTT broker hostname
 - `--mqtt-broker-port PORT`: MQTT broker port (default: 1883)
 - `--mqtt-username USER`: MQTT username
 - `--mqtt-password PASS`: MQTT password
 - `--mqtt-topic-prefix PREFIX`: MQTT topic prefix (default: cpu-loader)
 - `--mqtt-client-id ID`: MQTT client ID (default: cpu-loader)
+
+#### Computation Types
+
+CPU Loader supports different computation algorithms for load generation with **precise time control**:
+
+- **`busy-wait`** (default): Simple busy loop - fastest execution, minimal overhead, most accurate timing
+- **`pi`**: PI calculation using Leibniz formula - moderate computational intensity, mathematical workload
+- **`primes`**: Prime number finding - variable computational load, cryptographic-style operations
+- **`matrix`**: 4x4 matrix multiplication - consistent computational patterns, linear algebra operations
+- **`fibonacci`**: Lightweight mathematical operations - balanced computational load with micro-pauses
+
+All algorithms are **time-controlled** to ensure accurate load percentages. The system uses 10ms cycles with frequent timing checks to maintain precise CPU utilization.
+
+**Examples:**
+```bash
+# Use PI calculation for CPU load
+uv run cpu-loader --computation-type pi
+
+# Use prime number calculation
+uv run cpu-loader --computation-type primes --port 8001
+
+# Use matrix multiplication
+uv run cpu-loader --computation-type matrix
+```
 
 ### WebUI
 
@@ -164,6 +193,26 @@ curl -X POST http://localhost:8000/api/threads/load/all \
 curl -X POST http://localhost:8000/api/threads \
   -H "Content-Type: application/json" \
   -d '{"num_threads": 8}'
+```
+
+#### Get Computation Type
+```bash
+curl http://localhost:8000/api/computation-type
+```
+
+Response:
+```json
+{
+  "computation_type": "pi",
+  "available_types": ["busy-wait", "pi", "primes", "matrix", "fibonacci"]
+}
+```
+
+#### Set Computation Type
+```bash
+curl -X PUT http://localhost:8000/api/computation-type \
+  -H "Content-Type: application/json" \
+  -d '{"computation_type": "fibonacci"}'
 ```
 
 ## API Documentation
@@ -271,6 +320,31 @@ The example demonstrates:
 - Individual thread control
 - Resetting to idle
 
+### Computation Types Demo
+
+A comprehensive demo script is available in `examples/computation_types_demo.py` to test all computation algorithms:
+
+```bash
+# Start the server
+uv run cpu-loader
+
+# In another terminal, run the demo (tests all computation types)
+python examples/computation_types_demo.py
+
+# Test specific computation types only
+python examples/computation_types_demo.py --types pi fibonacci
+
+# Custom load and duration
+python examples/computation_types_demo.py --load 50 --duration 15
+```
+
+The demo script:
+
+- Tests each computation type systematically
+- Monitors actual CPU usage vs. target load
+- Provides performance comparisons between algorithms
+- Shows timing accuracy for each computation method
+
 ## Architecture
 
 - **src/cpu_loader_core.c**: High-performance C implementation using pthreads for CPU load generation
@@ -291,13 +365,22 @@ The example demonstrates:
 
 ## Use Cases
 
-- **Performance Testing**: Test application behavior under various CPU loads
-- **Stress Testing**: Validate system stability under high CPU utilization
-- **Thermal Testing**: Check cooling system effectiveness
-- **Power Consumption Analysis**: Measure power usage at different load levels
-- **Benchmarking**: Create reproducible load scenarios
+- **Performance Testing**: Test application behavior under various CPU loads and computation types
+- **Stress Testing**: Validate system stability under high CPU utilization with different algorithms
+- **Thermal Testing**: Use fibonacci or matrix computations for maximum heat generation
+- **Power Consumption Analysis**: Compare power usage across different computation algorithms
+- **Benchmarking**: Create reproducible load scenarios with specific computation patterns
+- **Algorithm Testing**: Test cache performance (matrix), mathematical units (pi), or crypto operations (primes)
 - **IoT Integration**: Integrate with Home Assistant, Node-RED, or other MQTT-based systems
-- **Monitoring**: Feed CPU metrics into monitoring dashboards via MQTT
+- **Monitoring**: Feed CPU metrics and temperature data into monitoring dashboards via MQTT
+
+### Computation Algorithm Use Cases
+
+- **`busy-wait`**: Baseline testing, pure timing validation, minimal computational overhead
+- **`pi`**: Mathematical processing benchmarks, floating-point unit testing
+- **`primes`**: Cryptographic algorithm simulation, integer arithmetic testing
+- **`matrix`**: Linear algebra workloads, cache hierarchy testing, SIMD instruction testing
+- **`fibonacci`**: Balanced computational load for general stress testing
 
 ## Development
 
@@ -327,10 +410,13 @@ Versions are automatically determined based on commit messages:
 
 - **Patch bump** (0.0.X): Every commit to main
 - **Minor bump** (0.X.0): Commits prefixed with `feat:`
+
   ```bash
   git commit -m "feat: add new CPU monitoring feature"
   ```
+
 - **Major bump** (X.0.0): Commits with `major:`, `breaking:`, or `BREAKING CHANGE:`
+
   ```bash
   git commit -m "major: redesign API interface"
   git commit -m "breaking: remove deprecated endpoints"
@@ -339,6 +425,7 @@ Versions are automatically determined based on commit messages:
 #### Release Process
 
 1. **Commit and push to main**:
+
    ```bash
    git add .
    git commit -m "feat: add WebSocket support"

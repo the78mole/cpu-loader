@@ -57,6 +57,17 @@ class CPUMetricsResponse(BaseModel):
     cpu_temperature: Optional[float] = None
 
 
+class ComputationTypeRequest(BaseModel):
+    computation_type: str = Field(
+        ..., description="Computation type: busy-wait, pi, primes, matrix, fibonacci"
+    )
+
+
+class ComputationTypeResponse(BaseModel):
+    computation_type: str
+    available_types: List[str]
+
+
 # Global CPU loader instance, MQTT publisher, and WebSocket connections
 cpu_loader = None
 mqtt_publisher: Optional[MQTTPublisher] = None
@@ -149,6 +160,11 @@ async def lifespan(app: FastAPI):
     global cpu_loader, mqtt_publisher, monitoring_task
     # Startup
     cpu_loader = CPULoader()
+
+    # Set computation type if specified in app state
+    computation_type = getattr(app.state, "computation_type", None)
+    if computation_type:
+        cpu_loader.set_computation_type_from_string(computation_type)
 
     # Initialize MQTT publisher with settings from arguments or environment
     mqtt_args = getattr(app.state, "mqtt_args", {})
@@ -309,6 +325,30 @@ async def set_all_thread_loads(request: AllThreadsLoadRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@app.get("/api/computation-type", response_model=ComputationTypeResponse)
+async def get_computation_type():
+    """Get the current computation type."""
+    current_type = cpu_loader.get_computation_type_string()
+    available_types = ["busy-wait", "pi", "primes", "matrix", "fibonacci"]
+    return ComputationTypeResponse(
+        computation_type=current_type, available_types=available_types
+    )
+
+
+@app.put("/api/computation-type")
+async def set_computation_type(request: ComputationTypeRequest):
+    """Set the computation type for CPU load generation."""
+    try:
+        cpu_loader.set_computation_type_from_string(request.computation_type)
+        return {
+            "status": "success",
+            "computation_type": request.computation_type,
+            "message": f"Computation type set to {request.computation_type}",
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
@@ -329,6 +369,12 @@ def parse_args():
         "--disable-temperature",
         action="store_true",
         help="Disable CPU temperature monitoring (useful if temperature sensors are unavailable)",
+    )
+    parser.add_argument(
+        "--computation-type",
+        choices=["busy-wait", "pi", "primes", "matrix", "fibonacci"],
+        default="busy-wait",
+        help="Type of computation to perform during CPU load generation (default: busy-wait)",
     )
 
     # MQTT arguments
@@ -385,8 +431,9 @@ def run():
     if args.mqtt_client_id:
         mqtt_args["client_id"] = args.mqtt_client_id
 
-    # Store MQTT args in app state for lifespan to access
+    # Store MQTT args and computation type in app state for lifespan to access
     app.state.mqtt_args = mqtt_args
+    app.state.computation_type = args.computation_type
 
     # Run the server
     uvicorn.run(app, host=args.host, port=args.port)
