@@ -27,7 +27,7 @@ classifiers = [
 dependencies = [
     "fastapi==0.122.0",
     "uvicorn[standard]==0.38.0",
-    "pydantic==2.12.4",
+    "pydantic==2.12.5",
     "requests==2.32.5",
     "psutil>=5.9.0",
     "websockets>=12.0",
