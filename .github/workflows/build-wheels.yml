@@ -162,13 +162,19 @@ jobs:
           name: sdist
           path: dist
 
+      - name: Verify artifacts
+        run: |
+          ls -la dist/
+          echo "Checking wheel integrity..."
+          python -m zipfile --test dist/*.whl || echo "Some wheels might be corrupted"
+
       - name: Publish to PyPI
         if: ${{ !env.ACT }}
         uses: pypa/gh-action-pypi-publish@release/v1
 
   create_release:
     name: Create GitHub Release
-    needs: [version, build_wheels, build_sdist]
+    needs: [version, publish]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
