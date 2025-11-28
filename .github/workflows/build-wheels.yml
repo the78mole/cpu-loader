@@ -153,9 +153,28 @@ jobs:
     steps:
       - uses: actions/download-artifact@v6
         with:
-          pattern: wheels-*
+          name: wheels-ubuntu-latest-x86_64
           path: dist
-          merge-multiple: true
+
+      - uses: actions/download-artifact@v6
+        with:
+          name: wheels-ubuntu-latest-aarch64
+          path: dist
+
+      - uses: actions/download-artifact@v6
+        with:
+          name: wheels-macos-14-x86_64
+          path: dist
+
+      - uses: actions/download-artifact@v6
+        with:
+          name: wheels-macos-15-x86_64
+          path: dist
+
+      - uses: actions/download-artifact@v6
+        with:
+          name: wheels-macos-15-arm64
+          path: dist
 
       - uses: actions/download-artifact@v6
         with:
@@ -197,9 +216,28 @@ jobs:
 
       - uses: actions/download-artifact@v6
         with:
-          pattern: wheels-*
+          name: wheels-ubuntu-latest-x86_64
           path: dist
-          merge-multiple: true
+
+      - uses: actions/download-artifact@v6
+        with:
+          name: wheels-ubuntu-latest-aarch64
+          path: dist
+
+      - uses: actions/download-artifact@v6
+        with:
+          name: wheels-macos-14-x86_64
+          path: dist
+
+      - uses: actions/download-artifact@v6
+        with:
+          name: wheels-macos-15-x86_64
+          path: dist
+
+      - uses: actions/download-artifact@v6
+        with:
+          name: wheels-macos-15-arm64
+          path: dist
 
       - uses: actions/download-artifact@v6
         with:
