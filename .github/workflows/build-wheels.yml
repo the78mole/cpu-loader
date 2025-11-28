@@ -143,13 +143,13 @@ jobs:
           name: sdist
           path: dist/*.tar.gz
 
-  publish:
-    name: Publish to PyPI
+  create_release:
+    name: Create GitHub Release
     needs: [version, build_wheels, build_sdist]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
-      id-token: write
+      contents: write
     steps:
       - uses: actions/download-artifact@v6
         with:
@@ -201,13 +201,13 @@ jobs:
           verbose: true
           attestations: true
 
-  create_release:
-    name: Create GitHub Release
-    needs: [version, publish]
+  publish:
+    name: Publish to PyPI
+    needs: [version, create_release]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
-      contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@v6
         with:
