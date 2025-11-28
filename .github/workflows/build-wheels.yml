@@ -166,11 +166,21 @@ jobs:
         run: |
           ls -la dist/
           echo "Checking wheel integrity..."
-          python -m zipfile --test dist/*.whl || echo "Some wheels might be corrupted"
+          for wheel in dist/*.whl; do
+            echo "Testing $wheel"
+            if ! python -m zipfile --test "$wheel"; then
+              echo "ERROR: $wheel is corrupted!"
+              exit 1
+            fi
+          done
+          echo "All wheels verified successfully"
 
       - name: Publish to PyPI
         if: ${{ !env.ACT }}
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true
+          attestations: true
 
   create_release:
     name: Create GitHub Release
