@@ -57,7 +57,22 @@ A tool to generate CPU load on a system with runtime configuration through a Web
 
 ## Installation
 
-### From Pre-built Wheels (Recommended)
+### Using uv tool (Recommended for CLI usage)
+
+For users who want the `cpu-loader` command available system-wide, use `uv tool install`:
+
+```bash
+uv tool install cpu-loader
+```
+
+This installs cpu-loader as a standalone tool that can be run from anywhere:
+
+```bash
+cpu-loader --help
+cpu-loader --host 0.0.0.0 --port 8000
+```
+
+### From Pre-built Wheels
 
 Pre-compiled wheels are available for Linux (x86_64, ARM64) and macOS (x86_64, ARM64):
 
@@ -344,6 +359,134 @@ The demo script:
 - Monitors actual CPU usage vs. target load
 - Provides performance comparisons between algorithms
 - Shows timing accuracy for each computation method
+
+## Running as a Systemd Service
+
+You can run CPU Loader as a systemd service to start automatically on boot and run in the background.
+
+### Create Systemd Service File
+
+Create `/etc/systemd/system/cpu-loader.service`:
+
+```ini
+[Unit]
+Description=CPU Loader Service
+After=network.target
+
+[Service]
+Type=simple
+User=your-username
+WorkingDirectory=/home/your-username
+ExecStart=/home/your-username/.local/bin/cpu-loader --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=5
+
+# Optional: Set environment variables for MQTT
+#Environment="MQTT_BROKER_HOST=mqtt.example.com"
+#Environment="MQTT_BROKER_PORT=1883"
+#Environment="MQTT_USERNAME=myuser"
+#Environment="MQTT_PASSWORD=mypassword"
+#Environment="MQTT_TOPIC_PREFIX=cpu-loader"
+#Environment="MQTT_CLIENT_ID=cpu-loader-001"
+
+# Optional: Disable temperature monitoring
+#Environment="DISABLE_TEMPERATURE=1"
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**Important:** Replace `your-username` with your actual username, and adjust the `ExecStart` path to point to where `cpu-loader` is installed:
+- If installed with `uv tool install`: Usually `~/.local/bin/cpu-loader`
+- If installed with `pip install --user`: Usually `~/.local/bin/cpu-loader`
+- If installed system-wide: Usually `/usr/local/bin/cpu-loader`
+
+### Enable and Start the Service
+
+```bash
+# Reload systemd to recognize the new service
+sudo systemctl daemon-reload
+
+# Enable the service to start on boot
+sudo systemctl enable cpu-loader
+
+# Start the service now
+sudo systemctl start cpu-loader
+
+# Check service status
+sudo systemctl status cpu-loader
+
+# View service logs
+sudo journalctl -u cpu-loader -f
+```
+
+### Manage the Service
+
+```bash
+# Stop the service
+sudo systemctl stop cpu-loader
+
+# Restart the service
+sudo systemctl restart cpu-loader
+
+# Disable auto-start on boot
+sudo systemctl disable cpu-loader
+```
+
+### Example Service Configurations
+
+**Basic Service (no MQTT):**
+```ini
+[Unit]
+Description=CPU Loader Service
+After=network.target
+
+[Service]
+Type=simple
+User=cpuloader
+ExecStart=/home/cpuloader/.local/bin/cpu-loader --host 0.0.0.0 --port 8000
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**Service with MQTT Integration:**
+```ini
+[Unit]
+Description=CPU Loader Service with MQTT
+After=network.target
+
+[Service]
+Type=simple
+User=cpuloader
+ExecStart=/home/cpuloader/.local/bin/cpu-loader --host 0.0.0.0 --port 8000
+Environment="MQTT_BROKER_HOST=192.168.1.100"
+Environment="MQTT_BROKER_PORT=1883"
+Environment="MQTT_USERNAME=cpuloader"
+Environment="MQTT_PASSWORD=secretpassword"
+Environment="MQTT_TOPIC_PREFIX=home/sensors/cpu-loader"
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**Service with Custom Computation Type:**
+```ini
+[Unit]
+Description=CPU Loader Service (Matrix Computation)
+After=network.target
+
+[Service]
+Type=simple
+User=cpuloader
+ExecStart=/home/cpuloader/.local/bin/cpu-loader --host 0.0.0.0 --port 8080 --computation-type matrix
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ## Architecture
 
