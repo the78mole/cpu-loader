@@ -1,0 +1,39 @@
+Source: cpu-loader
+Section: utils
+Priority: optional
+Maintainer: the78mole <the78mole@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               python3-all-dev,
+               python3-setuptools,
+               python3-wheel,
+               python3-pip
+Standards-Version: 4.6.2
+Homepage: https://github.com/the78mole/cpu-loader
+Vcs-Browser: https://github.com/the78mole/cpu-loader
+Vcs-Git: https://github.com/the78mole/cpu-loader.git
+Rules-Requires-Root: no
+
+Package: cpu-loader
+Architecture: any
+Depends: ${python3:Depends},
+         ${shlibs:Depends},
+         ${misc:Depends},
+         python3-fastapi (>= 0.124.0),
+         python3-uvicorn (>= 0.38.0),
+         python3-pydantic (>= 2.12.5),
+         python3-requests (>= 2.32.5),
+         python3-psutil (>= 5.9.0),
+         python3-websockets (>= 12.0),
+         python3-paho-mqtt (>= 2.1.0)
+Description: CPU load generator with WebUI and REST API
+ A tool to generate CPU load on a system with runtime configuration
+ through a WebUI and REST API. It supports multiple computation types
+ and provides real-time monitoring capabilities.
+ .
+ Features:
+  - Multiple computation types (prime numbers, matrix operations, etc.)
+  - WebUI for easy configuration
+  - REST API for programmatic control
+  - MQTT support for IoT integration
+  - Real-time load monitoring

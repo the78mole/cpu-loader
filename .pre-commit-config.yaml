@@ -39,3 +39,55 @@ repos:
         additional_dependencies: [types-psutil, types-requests]
         args: ["--ignore-missing-imports", "--no-strict-optional"]
         files: ^src/.*\.py$
+
+  # Shell script validation
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: ["--severity=warning"]
+        files: \.sh$
+
+  # Python script validation (including .github/scripts)
+  - repo: https://github.com/psf/black
+    rev: 25.11.0
+    hooks:
+      - id: black
+        name: black (scripts)
+        language_version: python3
+        files: ^\.github/scripts/.*\.py$
+
+  # YAML validation for workflow files
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.36.0
+    hooks:
+      - id: yamllint
+        args: ["-d", "{extends: default, rules: {line-length: {max: 120}, document-start: disable}}"]
+        files: \.(yaml|yml)$
+
+  # Debian control file validation
+  - repo: local
+    hooks:
+      - id: debian-control-syntax
+        name: Validate debian/control syntax
+        entry: bash -c 'if [ -f debian/control ]; then grep -q "^Package:" debian/control &&
+          grep -q "^Architecture:" debian/control &&
+          grep -q "^Description:" debian/control || exit 1; fi'
+        language: system
+        files: ^debian/control$
+        pass_filenames: false
+
+      - id: debian-changelog-syntax
+        name: Validate debian/changelog format
+        entry: bash -c 'if [ -f debian/changelog ]; then head -1 debian/changelog |
+          grep -qE "^[a-z0-9][a-z0-9+.-]+ \([^)]+\) [a-z]+; urgency=" || exit 1; fi'
+        language: system
+        files: ^debian/changelog$
+        pass_filenames: false
+
+      - id: distros-yaml-validation
+        name: Validate distros.yaml with Python
+        entry: python3 -c "import yaml; yaml.safe_load(open('distros.yaml'))"
+        language: system
+        files: ^distros\.yaml$
+        pass_filenames: false

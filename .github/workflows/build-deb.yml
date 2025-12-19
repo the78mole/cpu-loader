@@ -1,0 +1,227 @@
+name: Build DEB Packages
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  version:
+    name: Determine Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      version_tag: ${{ steps.version.outputs.version_tag }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Generate version
+        id: version
+        uses: paulhatch/semantic-version@v5.4.0
+        with:
+          tag_prefix: "v"
+          major_pattern: "/(feat|fix|refactor)!:/"
+          minor_pattern: "/^feat:/"
+          version_format: "${major}.${minor}.${patch}"
+          bump_each_commit: true
+          search_commit_body: true
+
+      - name: Display Version Info
+        run: |
+          echo "### 📦 Version Information" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version Tag**: ${{ steps.version.outputs.version_tag }}" >> $GITHUB_STEP_SUMMARY
+
+  generate_matrix:
+    name: Generate Build Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Generate matrix
+        id: set-matrix
+        run: |
+          MATRIX=$(python3 .github/scripts/generate-matrix.py)
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          echo "Generated matrix:"
+          echo "$MATRIX" | python3 -m json.tool
+
+  build_deb:
+    name: Build ${{ matrix.distro }} ${{ matrix.version }} (${{ matrix.arch }})
+    needs: [version, generate_matrix]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.generate_matrix.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up QEMU for cross-compilation
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Update version in files
+        run: |
+          .github/scripts/update-version.sh \
+            "${{ needs.version.outputs.version }}" \
+            "${{ matrix.codename }}"
+
+      - name: Build DEB package
+        run: |
+          .github/scripts/build-deb-docker.sh \
+            "${{ matrix.distro }}" \
+            "${{ matrix.codename }}" \
+            "${{ matrix.arch }}"
+
+      - name: List built packages
+        run: |
+          echo "### 📦 Built Packages" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          ls -lh deb-packages/*.deb || echo "No .deb files found"
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload DEB packages
+        uses: actions/upload-artifact@v5
+        with:
+          name: deb-${{ matrix.distro }}-${{ matrix.version }}-${{ matrix.arch }}
+          path: deb-packages/*.deb
+          if-no-files-found: error
+
+  create_apt_repository:
+    name: Create APT Repository Structure
+    needs: [version, generate_matrix, build_deb]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download all DEB artifacts
+        uses: actions/download-artifact@v6
+        with:
+          path: all-debs
+          pattern: deb-*
+
+      - name: Install APT repository tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev apt-utils gnupg
+
+      - name: Organize packages by distribution
+        run: .github/scripts/organize-packages.sh all-debs apt-repo
+
+      - name: Create Packages files
+        run: .github/scripts/create-packages-files.sh apt-repo
+
+      - name: Create Release files
+        run: .github/scripts/create-release-files.sh apt-repo
+
+      - name: Create directory structure info
+        run: |
+          .github/scripts/create-repo-readme.sh \
+            "${{ needs.version.outputs.version }}" \
+            "${{ needs.version.outputs.version_tag }}" \
+            apt-repo/README.md
+
+      - name: Upload APT repository structure
+        uses: actions/upload-artifact@v5
+        with:
+          name: apt-repository
+          path: apt-repo/
+
+      - name: Package summary
+        run: |
+          echo "### 📦 APT Repository Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Repository structure:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tree apt-repo/ || find apt-repo/ -type f
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  publish_debs:
+    name: Publish DEB Packages to Release
+    needs: [version, generate_matrix, build_deb, create_apt_repository]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download all DEB artifacts
+        uses: actions/download-artifact@v6
+        with:
+          path: all-debs
+          pattern: deb-*
+
+      - name: Download APT repository
+        uses: actions/download-artifact@v6
+        with:
+          name: apt-repository
+          path: apt-repo
+
+      - name: Organize packages for release
+        run: |
+          mkdir -p release-packages
+          find all-debs -name "*.deb" -exec cp {} release-packages/ \;
+          ls -lh release-packages/
+
+      - name: Create or Update Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.version_tag }}
+          name: Release ${{ needs.version.outputs.version }}
+          files: |
+            release-packages/*.deb
+            apt-repo/README.md
+          generate_release_notes: true
+          body: |
+            ## Version ${{ needs.version.outputs.version }}
+
+            ### DEB Package Installation
+
+            #### Quick Install (Debian/Ubuntu)
+            ```bash
+            # Download the package for your architecture and distribution
+            VERSION="${{ needs.version.outputs.version }}"
+            TAG="${{ needs.version.outputs.version_tag }}"
+            wget https://github.com/the78mole/cpu-loader/releases/download/${TAG}/cpu-loader_${VERSION}-1_<arch>.deb
+            sudo dpkg -i cpu-loader_${VERSION}-1_<arch>.deb
+            sudo apt-get install -f
+            ```
+
+            #### Available Packages
+            - **Debian 12 (Bookworm)**: amd64, arm64, armhf, riscv64
+            - **Debian 13 (Trixie)**: amd64, arm64, armhf, riscv64
+            - **Ubuntu 22.04 (Jammy)**: amd64, arm64, armhf, riscv64
+            - **Ubuntu 24.04 (Noble)**: amd64, arm64, armhf, riscv64
+
+            ### PyPI Installation
+            ```bash
+            pip install cpu-loader==${{ needs.version.outputs.version }}
+            ```
+
+            ### Usage
+            After installation:
+            ```bash
+            cpu-loader
+            ```
