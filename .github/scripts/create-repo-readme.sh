@@ -57,7 +57,6 @@ sudo apt-get install -f  # Install dependencies
 - amd64 (x86_64)
 - arm64 (aarch64)
 - armhf (32-bit ARM)
-- riscv64 (RISC-V 64-bit)
 
 ## Usage
 

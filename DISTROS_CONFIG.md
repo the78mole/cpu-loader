@@ -24,6 +24,7 @@ distributions:
 - **architectures**: Array der unterstützten CPU-Architekturen
   - Verfügbar: `amd64`, `arm64`, `armhf`, `riscv64`, `i386`
   - Jede Distribution kann unterschiedliche Architekturen haben
+  - Hinweis: riscv64 wird nur von neueren Distributionen unterstützt (Debian 13+, Ubuntu 24.04+)
 
 ### Optionale Felder
 
@@ -111,9 +112,12 @@ python3 .github/scripts/generate-matrix.py
 
 Die derzeit konfigurierten Distributionen sind:
 
-- **Debian 12 (Bookworm)**: amd64, arm64, armhf, riscv64
-- **Debian 13 (Trixie)**: amd64, arm64, armhf, riscv64
-- **Ubuntu 22.04 LTS (Jammy)**: amd64, arm64, armhf, riscv64
-- **Ubuntu 24.04 LTS (Noble)**: amd64, arm64, armhf, riscv64
+- **Debian 12 (Bookworm)**: amd64, arm64, armhf (3 Pakete)
+- **Debian 13 (Trixie)**: amd64, arm64, armhf, riscv64 (4 Pakete)
+- **Ubuntu 22.04 LTS (Jammy)**: amd64, arm64, armhf (3 Pakete)
+- **Ubuntu 24.04 LTS (Noble)**: amd64, arm64, armhf, riscv64 (4 Pakete)
 
-Insgesamt: **4 Distributionen × 4 Architekturen = 16 Pakete** pro Build
+Insgesamt: **14 Pakete** pro Build (6 + 8)
+
+**Hinweis:** riscv64 wird nur von neueren Distributionen unterstützt (Debian 13/Trixie und Ubuntu 24.04/Noble),
+da erst ab diesen Versionen offizielle Docker-Images mit riscv64-Varianten verfügbar sind.

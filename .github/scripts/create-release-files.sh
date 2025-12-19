@@ -24,7 +24,7 @@ Origin: cpu-loader
 Label: cpu-loader
 Suite: $codename
 Codename: $codename
-Architectures: amd64 arm64 armhf riscv64
+Architectures: amd64 arm64 armhf
 Components: main
 Description: CPU Loader APT Repository for $distro $codename
 EOF

@@ -3,7 +3,7 @@ distributions:
     version: "12"
     codename: bookworm
     display_name: "Debian 12 (Bookworm)"
-    architectures: [amd64, arm64, armhf, riscv64]
+    architectures: [amd64, arm64, armhf]
     eol: "2026-06"
 
   - distro: debian
@@ -17,7 +17,7 @@ distributions:
     version: "22.04"
     codename: jammy
     display_name: "Ubuntu 22.04 LTS (Jammy Jellyfish)"
-    architectures: [amd64, arm64, armhf, riscv64]
+    architectures: [amd64, arm64, armhf]
     eol: "2027-04"
 
   - distro: ubuntu

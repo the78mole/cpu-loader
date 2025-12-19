@@ -9,8 +9,23 @@ OUTPUT_DIR="${2:-apt-repo}"
 
 echo "Organizing packages from $INPUT_DIR to $OUTPUT_DIR"
 
-# Create directory structure
-mkdir -p "$OUTPUT_DIR"/{debian/{bookworm,trixie},ubuntu/{jammy,noble}}/binary-{amd64,arm64,armhf,riscv64}
+# Collect all unique architectures from package names
+declare -A ALL_ARCHES
+for dir in "$INPUT_DIR"/deb-*; do
+  if [ -d "$dir" ]; then
+    pkg=$(basename "$dir")
+    arch=$(echo "$pkg" | cut -d'-' -f4)
+    ALL_ARCHES["$arch"]=1
+  fi
+done
+
+# Create directory structure for all found architectures
+for codename in bookworm trixie jammy noble; do
+  for arch in "${!ALL_ARCHES[@]}"; do
+    mkdir -p "$OUTPUT_DIR/debian/$codename/binary-$arch" 2>/dev/null || true
+    mkdir -p "$OUTPUT_DIR/ubuntu/$codename/binary-$arch" 2>/dev/null || true
+  done
+done
 
 # Copy packages to appropriate directories
 for dir in "$INPUT_DIR"/deb-*; do
