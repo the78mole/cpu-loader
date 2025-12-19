@@ -1,40 +1,37 @@
 name: Build and Publish Wheels
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version to build'
+        required: true
+        type: string
+      version_tag:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        type: string
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build'
+        required: true
+        type: string
+      version_tag:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        type: string
 
 jobs:
-  version:
-    name: Determine Version
+  update_version:
+    name: Update Version Files
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-      version_tag: ${{ steps.version.outputs.version_tag }}
     steps:
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Generate version
-        id: version
-        uses: paulhatch/semantic-version@v5.4.0
-        with:
-          tag_prefix: "v"
-          major_pattern: "/(feat|fix|refactor)!:/"
-          minor_pattern: "/^feat:/"
-          version_format: "${major}.${minor}.${patch}"
-          bump_each_commit: true
-          search_commit_body: true
 
       - name: Update pyproject.toml version
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          VERSION="${{ inputs.version }}"
           sed -i "s/^version = .*/version = \"$VERSION\"/" pyproject.toml
           cat pyproject.toml | grep version
 
@@ -46,17 +43,14 @@ jobs:
 
       - name: Display Version Info
         run: |
-          echo "### 📦 Version Information" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Building Wheels" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version Tag**: ${{ steps.version.outputs.version_tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Major**: ${{ steps.version.outputs.major }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Minor**: ${{ steps.version.outputs.minor }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Patch**: ${{ steps.version.outputs.patch }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version Tag**: ${{ inputs.version_tag }}" >> $GITHUB_STEP_SUMMARY
 
   build_wheels:
     name: Build wheels on ${{ matrix.os }} for ${{ matrix.arch }}
-    needs: version
+    needs: update_version
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -116,7 +110,7 @@ jobs:
 
   build_sdist:
     name: Build source distribution
-    needs: version
+    needs: update_version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -145,7 +139,7 @@ jobs:
 
   create_release:
     name: Create GitHub Release
-    needs: [version, build_wheels, build_sdist]
+    needs: [update_version, build_wheels, build_sdist]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
@@ -204,7 +198,7 @@ jobs:
 
   publish:
     name: Publish to PyPI
-    needs: [version, create_release]
+    needs: [update_version, create_release]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
@@ -250,23 +244,23 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag ${{ needs.version.outputs.version_tag }}
-          git push origin ${{ needs.version.outputs.version_tag }}
+          git tag ${{ inputs.version_tag }}
+          git push origin ${{ inputs.version_tag }}
 
       - name: Create Release
         if: ${{ !env.ACT }}
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.version.outputs.version_tag }}
-          name: Release ${{ needs.version.outputs.version }}
+          tag_name: ${{ inputs.version_tag }}
+          name: Release ${{ inputs.version }}
           files: dist/*
           generate_release_notes: true
           body: |
-            ## Version ${{ needs.version.outputs.version }}
+            ## Version ${{ inputs.version }}
 
             ### Installation
             ```bash
-            pip install cpu-loader==${{ needs.version.outputs.version }}
+            pip install cpu-loader==${{ inputs.version }}
             ```
 
             ### Pre-built Wheels

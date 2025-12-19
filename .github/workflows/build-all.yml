@@ -1,0 +1,58 @@
+name: Build All Packages
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  version:
+    name: Determine Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      version_tag: ${{ steps.version.outputs.version_tag }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Generate version
+        id: version
+        uses: paulhatch/semantic-version@v5.4.0
+        with:
+          tag_prefix: "v"
+          major_pattern: "/(feat|fix|refactor)!:/"
+          minor_pattern: "/^feat:/"
+          version_format: "${major}.${minor}.${patch}"
+          bump_each_commit: true
+          search_commit_body: true
+
+      - name: Display Version Info
+        run: |
+          echo "### 📦 Version Information" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version Tag**: ${{ steps.version.outputs.version_tag }}" >> $GITHUB_STEP_SUMMARY
+
+  build-wheels:
+    name: Build Python Wheels
+    needs: version
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+      version_tag: ${{ needs.version.outputs.version_tag }}
+    secrets: inherit
+
+  build-deb:
+    name: Build DEB Packages
+    needs: version
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+      version_tag: ${{ needs.version.outputs.version_tag }}
+    secrets: inherit

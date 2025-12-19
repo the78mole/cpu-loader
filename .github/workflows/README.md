@@ -2,6 +2,27 @@
 
 This directory contains the CI/CD workflows for the cpu-loader project.
 
+## Workflow Architecture
+
+The workflow structure uses a **main orchestrator workflow** that calls two specialized **reusable workflows** for building different package types.
+
+### Main Workflow: build-all.yml
+
+Central workflow that orchestrates all build processes.
+
+**Trigger**: Push to main, PRs, or manual dispatch
+
+**Jobs**:
+1. **Version Generation**: Determines semantic version once (no duplication)
+2. **Build Wheels**: Calls `build-wheels.yml` with version
+3. **Build DEB**: Calls `build-deb.yml` with version
+
+**Benefits**:
+- Version generated once, used everywhere
+- Parallel execution of wheel and DEB builds
+- Single point of configuration
+- Easy maintenance
+
 ## Workflows
 
 ### ci.yml - Continuous Integration
@@ -11,24 +32,42 @@ This directory contains the CI/CD workflows for the cpu-loader project.
   - **Lint**: Runs pre-commit hooks (black, isort, flake8, mypy) using `uvx`
   - **Build and Test**: Tests on multiple Python versions (3.8-3.12) and OS (Ubuntu, macOS) using `uv`
 
-### build-wheels.yml - Build and Publish
-- **Trigger**: Push to main, tag push (`v*`), PR, or manual workflow dispatch
-- **Tools**: Uses `uv` for fast builds and `cibuildwheel` for multi-platform wheels
+### build-wheels.yml - Build Python Wheels (Reusable)
+- **Trigger**: Called by `build-all.yml` or manual dispatch with version inputs
+- **Inputs**:
+  - `version`: Version to build (e.g., "1.2.3")
+  - `version_tag`: Git tag (e.g., "v1.2.3")
+- **Tools**: Uses `cibuildwheel` for multi-platform wheels
 - **Jobs**:
-  - **Version**: Determines semantic version based on commit messages
-    - Patch bump: Every commit
-    - Minor bump: Commits prefixed with `feat:`
-    - Major bump: Commits with `major:`, `breaking:`, or `BREAKING CHANGE:`
+  - **Update Version**: Updates pyproject.toml with provided version
   - **Build Wheels**: Builds binary wheels for:
     - Linux: x86_64, ARM64 (aarch64)
     - macOS: x86_64 (Intel), ARM64 (Apple Silicon)
-  - **Build Source Distribution**: Creates sdist using `uvx`
+    - Python: 3.9, 3.10, 3.11, 3.12
+  - **Build Source Distribution**: Creates sdist
   - **Publish**: Publishes to PyPI (on main branch pushes only)
-  - **Create Release**: Creates GitHub Release with artifacts and auto-generated tag
+  - **Create Release**: Creates/updates GitHub Release with wheels
 
-## Publishing a Release
+### build-deb.yml - Build DEB Packages (Reusable)
+- **Trigger**: Called by `build-all.yml` or manual dispatch with version inputs
+- **Inputs**:
+  - `version`: Version to build (e.g., "1.2.3")
+  - `version_tag`: Git tag (e.g., "v1.2.3")
+- **Tools**: Docker + QEMU for cross-compilation
+- **Configuration**: [`distros.yaml`](../../distros.yaml) defines distributions
+- **Jobs**:
+  - **Generate Matrix**: Reads distros.yaml, creates build matrix
+  - **Build DEB**: Builds packages for:
+    - Debian 12 (Bookworm): amd64, arm64, armhf
+    - Debian 13 (Trixie): amd64, arm64, armhf, riscv64
+    - Ubuntu 22.04 (Jammy): amd64, arm64, armhf
+    - Ubuntu 24.04 (Noble): amd64, arm64, armhf, riscv64
+  - **Create APT Repository**: Generates Packages and Release files
+  - **Publish**: Adds DEB packages to GitHub Release
 
-The version is **automatically determined** using semantic versioning:
+## Versioning Strategy
+
+Versions are **automatically determined** using semantic versioning based on commit messages:
 
 1. Commit with appropriate prefix:
    ```bash
