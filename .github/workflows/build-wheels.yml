@@ -27,7 +27,7 @@ jobs:
     name: Update Version Files
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Update pyproject.toml version
         run: |
@@ -80,7 +80,7 @@ jobs:
             cibw_archs: "arm64"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download updated pyproject.toml
         uses: actions/download-artifact@v6
@@ -113,7 +113,7 @@ jobs:
     needs: update_version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download updated pyproject.toml
         uses: actions/download-artifact@v6
