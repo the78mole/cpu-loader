@@ -181,7 +181,7 @@ jobs:
           ls -lh release-packages/
 
       - name: Create or Update Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ inputs.version_tag }}
           name: Release ${{ inputs.version }}
