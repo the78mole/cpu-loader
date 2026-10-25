@@ -212,7 +212,7 @@ jobs:
             This release includes pre-built wheels for:
             - Linux: x86_64, ARM64
             - macOS: x86_64 (Intel), ARM64 (Apple Silicon)
-            - Python: 3.9, 3.10, 3.11, 3.12
+            - Python: 3.10, 3.11, 3.12
 
             ### Debian Packages
             This release includes DEB packages for:

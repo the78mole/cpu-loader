@@ -43,7 +43,7 @@ Central workflow that orchestrates all build processes.
   - **Build Wheels**: Builds binary wheels for:
     - Linux: x86_64, ARM64 (aarch64)
     - macOS: x86_64 (Intel), ARM64 (Apple Silicon)
-    - Python: 3.9, 3.10, 3.11, 3.12
+    - Python: 3.10, 3.11, 3.12
   - **Build Source Distribution**: Creates sdist
   - **Publish**: Publishes to PyPI (on main branch pushes only)
   - **Create Release**: Creates/updates GitHub Release with wheels
