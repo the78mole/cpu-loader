@@ -213,8 +213,9 @@ jobs:
             # Download the package for your distribution (bookworm, trixie, jammy, noble) and architecture
             VERSION="${{ inputs.version }}"
             TAG="${{ inputs.version_tag }}"
-            wget https://github.com/the78mole/cpu-loader/releases/download/${TAG}/cpu-loader_${VERSION}-1.<codename>_<arch>.deb
-            sudo dpkg -i cpu-loader_${VERSION}-1.<codename>_<arch>.deb
+            DEB="cpu-loader_${VERSION}-1.<codename>_<arch>.deb"
+            wget "https://github.com/the78mole/cpu-loader/releases/download/${TAG}/${DEB}"
+            sudo dpkg -i "${DEB}"
             sudo apt-get install -f
             ```
 
