@@ -11,6 +11,11 @@ on:
         description: 'Version tag (e.g., v1.0.0)'
         required: true
         type: string
+      native_only:
+        description: 'Build only amd64 packages (skips QEMU-emulated architectures)'
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       version:
@@ -53,7 +58,11 @@ jobs:
       - name: Generate matrix
         id: set-matrix
         run: |
-          MATRIX=$(python3 .github/scripts/generate-matrix.py)
+          if [ "${{ inputs.native_only }}" = "true" ]; then
+            MATRIX=$(python3 .github/scripts/generate-matrix.py --native-only)
+          else
+            MATRIX=$(python3 .github/scripts/generate-matrix.py)
+          fi
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
           echo "Generated matrix:"
           echo "$MATRIX" | python3 -m json.tool
