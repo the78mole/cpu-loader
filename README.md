@@ -578,7 +578,7 @@ Versions are automatically determined based on commit messages:
 2. **Automated workflow**:
    - Version is automatically calculated using semantic versioning
    - Wheels are built for Linux (x86_64, ARM64) and macOS (x86_64, ARM64)
-   - Python versions: 3.8, 3.9, 3.10, 3.11, 3.12
+   - Python versions: 3.10, 3.11, 3.12
    - Source distribution (sdist) is created
    - All artifacts are published to PyPI
    - A GitHub Release is created with version tag and artifacts
