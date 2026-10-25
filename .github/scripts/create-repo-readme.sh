@@ -23,32 +23,32 @@ cat > "$OUTPUT_FILE" << EOF
 ### Debian 12 (Bookworm)
 \`\`\`bash
 # Download the package for your architecture
-wget https://github.com/the78mole/cpu-loader/releases/download/$VERSION_TAG/cpu-loader_${VERSION}-1_amd64.deb
-sudo dpkg -i cpu-loader_${VERSION}-1_amd64.deb
+wget https://github.com/the78mole/cpu-loader/releases/download/$VERSION_TAG/cpu-loader_${VERSION}-1.bookworm_amd64.deb
+sudo dpkg -i cpu-loader_${VERSION}-1.bookworm_amd64.deb
 sudo apt-get install -f  # Install dependencies
 \`\`\`
 
 ### Debian 13 (Trixie)
 \`\`\`bash
 # Download the package for your architecture
-wget https://github.com/the78mole/cpu-loader/releases/download/$VERSION_TAG/cpu-loader_${VERSION}-1_amd64.deb
-sudo dpkg -i cpu-loader_${VERSION}-1_amd64.deb
+wget https://github.com/the78mole/cpu-loader/releases/download/$VERSION_TAG/cpu-loader_${VERSION}-1.trixie_amd64.deb
+sudo dpkg -i cpu-loader_${VERSION}-1.trixie_amd64.deb
 sudo apt-get install -f  # Install dependencies
 \`\`\`
 
 ### Ubuntu 22.04 (Jammy)
 \`\`\`bash
 # Download the package for your architecture
-wget https://github.com/the78mole/cpu-loader/releases/download/$VERSION_TAG/cpu-loader_${VERSION}-1_amd64.deb
-sudo dpkg -i cpu-loader_${VERSION}-1_amd64.deb
+wget https://github.com/the78mole/cpu-loader/releases/download/$VERSION_TAG/cpu-loader_${VERSION}-1.jammy_amd64.deb
+sudo dpkg -i cpu-loader_${VERSION}-1.jammy_amd64.deb
 sudo apt-get install -f  # Install dependencies
 \`\`\`
 
 ### Ubuntu 24.04 (Noble)
 \`\`\`bash
 # Download the package for your architecture
-wget https://github.com/the78mole/cpu-loader/releases/download/$VERSION_TAG/cpu-loader_${VERSION}-1_amd64.deb
-sudo dpkg -i cpu-loader_${VERSION}-1_amd64.deb
+wget https://github.com/the78mole/cpu-loader/releases/download/$VERSION_TAG/cpu-loader_${VERSION}-1.noble_amd64.deb
+sudo dpkg -i cpu-loader_${VERSION}-1.noble_amd64.deb
 sudo apt-get install -f  # Install dependencies
 \`\`\`
 
