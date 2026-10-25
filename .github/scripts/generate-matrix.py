@@ -2,6 +2,8 @@
 """
 Generate GitHub Actions matrix from distros.yaml
 Outputs a single-line JSON for use in workflow matrix
+
+With --native-only, only amd64 entries are emitted (no QEMU emulation).
 """
 
 import yaml
@@ -10,12 +12,16 @@ import sys
 
 
 def main():
+    native_only = "--native-only" in sys.argv[1:]
+
     with open("distros.yaml", "r") as f:
         config = yaml.safe_load(f)
 
     matrix = []
     for dist in config["distributions"]:
         for arch in dist["architectures"]:
+            if native_only and arch != "amd64":
+                continue
             matrix.append(
                 {
                     "distro": dist["distro"],

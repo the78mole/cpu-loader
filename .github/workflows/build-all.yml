@@ -9,6 +9,11 @@ on:
       - main
   workflow_dispatch:
 
+# Superseded PR runs are cancelled; runs on main always finish (they publish).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   version:
     name: Determine Version
@@ -61,6 +66,8 @@ jobs:
     with:
       version: ${{ needs.version.outputs.version }}
       version_tag: ${{ needs.version.outputs.version_tag }}
+      # PRs only build amd64; the full emulated matrix runs on main
+      native_only: ${{ github.event_name == 'pull_request' }}
     secrets: inherit
 
   publish_pypi:
