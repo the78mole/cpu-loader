@@ -173,11 +173,6 @@ jobs:
           name: sdist
           path: dist
 
-      - uses: actions/download-artifact@v8
-        with:
-          name: apt-repository
-          path: apt
-
       - name: Create Git Tag
         run: |
           git config user.name "github-actions[bot]"
@@ -191,9 +186,9 @@ jobs:
         with:
           tag_name: ${{ needs.version.outputs.version_tag }}
           name: Release ${{ needs.version.outputs.version }}
+          # DEB packages are attached by build-deb.yml (publish_debs)
           files: |
             dist/*
-            apt/**/*.deb
           generate_release_notes: true
           body: |
             ## Version ${{ needs.version.outputs.version }}

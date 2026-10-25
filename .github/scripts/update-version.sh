@@ -19,9 +19,11 @@ sed -i "s/^version = .*/version = \"$VERSION\"/" pyproject.toml
 echo "✓ Updated pyproject.toml"
 
 # Update debian/changelog
+# The ~CODENAME suffix keeps .deb filenames unique per distribution
+# (e.g. cpu-loader_1.2.3-1~bookworm_arm64.deb) and sorts below plain -1.
 TIMESTAMP=$(date -R)
 cat > debian/changelog << EOF
-cpu-loader ($VERSION-1) $CODENAME; urgency=medium
+cpu-loader ($VERSION-1~$CODENAME) $CODENAME; urgency=medium
 
   * Release version $VERSION
 
